@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/01 Core/">
+    <Project Path="Core.Api/Core.Api.csproj" />
+  </Folder>
+  <Folder Name="/02 Logic/">
+    <Project Path="Logic.Shared/Logic.Shared.csproj" />
+  </Folder>
+  <Folder Name="/03 Data/">
+    <Project Path="Data.Db/Data.Db.csproj" />
+  </Folder>
+  <Folder Name="/04 Shared/">
+    <Project Path="Shared.Interfaces/Shared.Interfaces.csproj" />
+  </Folder>
+</Solution>
