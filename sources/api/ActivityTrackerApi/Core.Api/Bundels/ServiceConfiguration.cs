@@ -1,6 +1,7 @@
 ﻿using Data.Db;
 using Logic.Shared;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Core.Api.Bundels
 {
@@ -16,6 +17,15 @@ namespace Core.Api.Bundels
             {
                 options.AddConsole();
                 options.AddDebug();
+            });
+
+            builder.Host.UseSerilog((context, config) =>
+            {
+                config
+                    .WriteTo.Console()
+                    .WriteTo.File(
+                        "logs/activitytracker.log",
+                        rollingInterval: RollingInterval.Day);
             });
 
             builder.Services.AddCors(options =>
