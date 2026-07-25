@@ -29,6 +29,8 @@ namespace Core.Api.Bundels
                     });
             });
 
+            builder.Services.AddHttpContextAccessor();
+
             SharedServiceRegistration.RegisterSharedServices(builder.Services);
 
             builder.Services.AddControllers();

@@ -8,5 +8,6 @@ namespace Logic.Shared.Interfaces
         public IDbRepositoryBase<UserEntity> UserTable { get; }
         public IDbRepositoryBase<UserAuthenticationEntity> UserAuthenticationTable { get; }
         public IDbRepositoryBase<DataSyncConnectionEntity> DataSyncConnectionTable { get; }
+        public Task SaveChangesAsync(string userName = "System");
     }
 }
