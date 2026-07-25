@@ -21,6 +21,7 @@ namespace Data.Db.Repositories.Interfaces
 
         Task<bool> Insert(TEntity entity, Expression<Func<TEntity, bool>>? predicate);
 
+        Task<bool> Update(TEntity entity, Expression<Func<TEntity, bool>>? predicate);
         Task<bool> Delete(int id);
     }
 }

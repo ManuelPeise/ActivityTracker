@@ -19,7 +19,8 @@ namespace Data.Db.Migrations
                 name: "DataSyncConnectionTable",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
                     DevideId = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
                     CreatedBy = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
@@ -36,7 +37,8 @@ namespace Data.Db.Migrations
                 name: "UserAuthenticationTable",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
                     Password = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false),
                     Salt = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false),
                     PasswordExpiresAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
@@ -91,41 +93,19 @@ namespace Data.Db.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_UserTable_UserAuthenticationId",
                 table: "UserTable",
-                column: "UserAuthenticationId");
+                column: "UserAuthenticationId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserTable_UserDataSyncId",
                 table: "UserTable",
-                column: "UserDataSyncId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_DataSyncConnectionTable_UserTable_Id",
-                table: "DataSyncConnectionTable",
-                column: "Id",
-                principalTable: "UserTable",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_UserAuthenticationTable_UserTable_Id",
-                table: "UserAuthenticationTable",
-                column: "Id",
-                principalTable: "UserTable",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                column: "UserDataSyncId",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_DataSyncConnectionTable_UserTable_Id",
-                table: "DataSyncConnectionTable");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_UserAuthenticationTable_UserTable_Id",
-                table: "UserAuthenticationTable");
-
             migrationBuilder.DropTable(
                 name: "UserTable");
 

@@ -1,7 +1,9 @@
 ﻿using Data.Db;
+using Logic.AuthenticationService;
 using Logic.Shared;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Shared.Models.Authentication;
 
 namespace Core.Api.Bundels
 {
@@ -9,6 +11,8 @@ namespace Core.Api.Bundels
     {
         internal static void ConfigureServices(WebApplicationBuilder builder, string corsPolicyName)
         {
+            builder.Services.Configure<JwtTokenModel>(builder.Configuration.GetSection("Jwt"));
+
             var connectionString = builder.Configuration.GetConnectionString("ActivityTrackerDb") 
                 ?? throw new InvalidOperationException("Connection string 'ActivityTrackerDb' not found.");
 
@@ -42,6 +46,7 @@ namespace Core.Api.Bundels
             builder.Services.AddHttpContextAccessor();
 
             SharedServiceRegistration.RegisterSharedServices(builder.Services);
+            AuthenticationServiceRegistration.AddAuthenticationService(builder.Services);
 
             builder.Services.AddControllers();
         }

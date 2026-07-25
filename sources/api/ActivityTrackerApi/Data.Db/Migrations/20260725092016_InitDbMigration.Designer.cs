@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Db.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260725063000_InitDbMigration")]
+    [Migration("20260725092016_InitDbMigration")]
     partial class InitDbMigration
     {
         /// <inheritdoc />
@@ -140,42 +140,26 @@ namespace Data.Db.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserAuthenticationId");
+                    b.HasIndex("UserAuthenticationId")
+                        .IsUnique();
 
-                    b.HasIndex("UserDataSyncId");
+                    b.HasIndex("UserDataSyncId")
+                        .IsUnique();
 
                     b.ToTable("UserTable", (string)null);
-                });
-
-            modelBuilder.Entity("Data.Db.Entities.Authentication.DataSyncConnectionEntity", b =>
-                {
-                    b.HasOne("Data.Db.Entities.Authentication.UserEntity", null)
-                        .WithOne()
-                        .HasForeignKey("Data.Db.Entities.Authentication.DataSyncConnectionEntity", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Data.Db.Entities.Authentication.UserAuthenticationEntity", b =>
-                {
-                    b.HasOne("Data.Db.Entities.Authentication.UserEntity", null)
-                        .WithOne()
-                        .HasForeignKey("Data.Db.Entities.Authentication.UserAuthenticationEntity", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Data.Db.Entities.Authentication.UserEntity", b =>
                 {
                     b.HasOne("Data.Db.Entities.Authentication.UserAuthenticationEntity", "UserAuthentication")
-                        .WithMany()
-                        .HasForeignKey("UserAuthenticationId")
+                        .WithOne()
+                        .HasForeignKey("Data.Db.Entities.Authentication.UserEntity", "UserAuthenticationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Data.Db.Entities.Authentication.DataSyncConnectionEntity", "UserDataSync")
-                        .WithMany()
-                        .HasForeignKey("UserDataSyncId")
+                        .WithOne()
+                        .HasForeignKey("Data.Db.Entities.Authentication.UserEntity", "UserDataSyncId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

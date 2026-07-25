@@ -99,6 +99,19 @@ namespace Data.Db.Repositories
             return false;
         }
 
+        public async Task<bool> Update(TEntity entity, Expression<Func<TEntity, bool>>? predicate)
+        {
+            var table = _appDbContext.Set<TEntity>();
+            var existingEntity = predicate != null ? await table.FirstOrDefaultAsync(predicate) : null;
+            
+            if (existingEntity != null)
+            {
+                _appDbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
+                return true;
+            }
+
+            return false;
+        }
         public async Task<bool> Delete(int id)
         {
             var entity = await _appDbContext.Set<TEntity>().FindAsync(id);

@@ -3,6 +3,7 @@
     <Project Path="Core.Api/Core.Api.csproj" />
   </Folder>
   <Folder Name="/02 Logic/">
+    <Project Path="Logic.AuthenticationService/Logic.AuthenticationService.csproj" Id="a70a033c-9aee-429e-94c5-6033a46cb65f" />
     <Project Path="Logic.Shared/Logic.Shared.csproj" />
   </Folder>
   <Folder Name="/03 Data/">
@@ -10,5 +11,6 @@
   </Folder>
   <Folder Name="/04 Shared/">
     <Project Path="Shared.Interfaces/Shared.Interfaces.csproj" />
+    <Project Path="Shared.Models/Shared.Models.csproj" Id="40a680c3-4f4b-48f9-8e2a-297629ae1d59" />
   </Folder>
 </Solution>

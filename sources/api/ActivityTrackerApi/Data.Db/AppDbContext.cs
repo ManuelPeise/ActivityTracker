@@ -34,11 +34,6 @@ namespace Data.Db
                 entity.Property(e => e.Salt).IsRequired().HasMaxLength(500);
                 entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.CreatedAt).IsRequired();
-
-                entity.HasOne<UserEntity>()
-                      .WithOne()
-                      .HasForeignKey<UserAuthenticationEntity>(e => e.Id)
-                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<DataSyncConnectionEntity>(entity =>
@@ -49,10 +44,18 @@ namespace Data.Db
                 entity.Property(e => e.DevideId).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.CreatedAt).IsRequired();
+            });
 
-                entity.HasOne<UserEntity>()
+            modelBuilder.Entity<UserEntity>(entity =>
+            {
+                entity.HasOne(u => u.UserAuthentication)
                       .WithOne()
-                      .HasForeignKey<DataSyncConnectionEntity>(e => e.Id)
+                      .HasForeignKey<UserEntity>(u => u.UserAuthenticationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(u => u.UserDataSync)
+                      .WithOne()
+                      .HasForeignKey<UserEntity>(u => u.UserDataSyncId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }
