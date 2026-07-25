@@ -1,6 +1,113 @@
-composer.phar
-/vendor/
 
-# Commit your application's lock file https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
-# You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
-# composer.lock
+# =========================
+# Build results
+# =========================
+[Bb]in/
+[Oo]bj/
+artifacts/
+publish/
+
+# =========================
+# Visual Studio
+# =========================
+.vs/
+*.user
+*.userosscache
+*.suo
+*.rsuser
+*.sln.docstates
+
+# =========================
+# Rider / ReSharper
+# =========================
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# NuGet
+# =========================
+packages/
+*.nupkg
+*.snupkg
+
+# Ignore NuGet config if it contains private feeds
+# Uncomment if applicable
+# NuGet.Config
+
+# =========================
+# Test Results
+# =========================
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Local secrets
+# =========================
+secrets.json
+
+# =========================
+# Azure
+# =========================
+.localhistory/
+
+# =========================
+# Profiling
+# =========================
+BenchmarkDotNet.Artifacts/
+
+# =========================
+# Coverage
+# =========================
+coverage/
+coverage-report/
+
+# =========================
+# Generated files
+# =========================
+Generated/
+*.generated.cs
+
+# =========================
+# Publish output
+# =========================
+wwwroot/lib/
+
+# =========================
+# Backup files
+# =========================
+*.bak
+*.orig
+*.rej
