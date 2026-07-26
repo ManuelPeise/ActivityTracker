@@ -17,6 +17,7 @@ import useStyles from "../hooks/useStyles";
 import { useTokens } from "../hooks/useTokens";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "../hooks/useAuth";
+import SideBar from "./SideBar";
 
 type AppNavBarProps = {
   showUserInfo: boolean;
@@ -25,10 +26,10 @@ type AppNavBarProps = {
 const AppNavBar: React.FC<AppNavBarProps> = (props) => {
   const { showUserInfo } = props;
   const { theme } = useStyles();
-
   const { tokenModel } = useTokens();
   const { onLogout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const open = Boolean(anchorEl);
 
@@ -62,11 +63,12 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
           alignItems: "center",
         }}
       >
-        <Box>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
           <FormLabel
             sx={{
               color: theme.fonts.textLight,
               fontWeight: theme.fonts.bold,
+              paddingLeft: showUserInfo ? 10 : 0,
             }}
           >
             {process.env.REACT_APP_TITLE}
@@ -76,12 +78,16 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
         <Box>
           {showUserInfo && (
             <>
-              <IconButton
-                sx={{ padding: 1 }}
-                onClick={handleOpen}
-                color="inherit"
-              >
-                <Avatar sx={{ padding: 1, width: 36, height: 36 }}>
+              <IconButton onClick={handleOpen} color="inherit">
+                <Avatar
+                  sx={{
+                    padding: 1,
+                    width: 30,
+                    height: 30,
+                    bgcolor: theme.background.primary,
+                    color: theme.fonts.textDark,
+                  }}
+                >
                   {accountAbbreviation}
                 </Avatar>
               </IconButton>
@@ -120,6 +126,12 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
           )}
         </Box>
       </Toolbar>
+      <SideBar
+        isOpen={sidebarOpen}
+        showSidebar={showUserInfo}
+        onClose={() => setSidebarOpen(false)}
+        onOpen={() => setSidebarOpen(true)}
+      />
     </AppBar>
   );
 };
