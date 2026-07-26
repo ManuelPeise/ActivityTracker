@@ -13,13 +13,11 @@ namespace Core.Api.Services.ApiControllers.Authentication
         }
 
         [HttpPost(Name = "RegisterUser")]
-        public async Task<IActionResult> RegisterUser([FromBody] UserRegistrationRequest request)
+        public async Task<bool> RegisterUser([FromBody] UserRegistrationRequest request)
         {
             var success = await _userRegistration.RegisterUser(request);
 
-            var host = Request.Host.Value;
-
-            return Redirect($"http://{host}/auth/login");
+            return success;
         }
     }
 }

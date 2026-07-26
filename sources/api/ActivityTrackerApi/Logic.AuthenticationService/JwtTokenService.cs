@@ -136,9 +136,9 @@ namespace Logic.AuthenticationService
         {
             return new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.EmailAddress),
-                new Claim(ClaimTypes.Email, user.EmailAddress),
-                new Claim(ClaimTypes.Expiration, DateTime.UtcNow.AddSeconds(_jwtTokenModel.ExpiresInSeconds).ToString("o"))
+                new Claim("name", $"{user.FirstName} {user.LastName}"),
+                new Claim("emailaddress", user.EmailAddress),
+                new Claim("expiration", DateTime.UtcNow.AddSeconds(_jwtTokenModel.ExpiresInSeconds).ToString("o"))
             };
         }
     }
