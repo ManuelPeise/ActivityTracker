@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Data.Db\Data.Db.csproj" />
     <ProjectReference Include="..\Logic.AuthenticationService\Logic.AuthenticationService.csproj" />
+    <ProjectReference Include="..\Logic.Import\Logic.Import.csproj" />
     <ProjectReference Include="..\Logic.Shared\Logic.Shared.csproj" />
     <ProjectReference Include="..\Shared.Models\Shared.Models.csproj" />
   </ItemGroup>

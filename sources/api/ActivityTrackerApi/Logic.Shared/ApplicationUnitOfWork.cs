@@ -6,6 +6,7 @@ using Data.Db.Repositories.Interfaces;
 using Logic.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
+using Data.Db.Entities.Import;
 
 namespace Logic.Shared
 {
@@ -16,10 +17,12 @@ namespace Logic.Shared
         private IDbRepositoryBase<UserEntity>? _userTable;
         private IDbRepositoryBase<UserAuthenticationEntity>? _userAuthenticationTable;
         private IDbRepositoryBase<DataSyncConnectionEntity>? _dataSyncConnectionTable;
+        private IDbRepositoryBase<ImportConfigurationEntity>? _importConfigurationTable;
 
         public IDbRepositoryBase<UserEntity> UserTable => _userTable ?? new DbRepositoryBase<UserEntity>(_dbContext);
         public IDbRepositoryBase<UserAuthenticationEntity> UserAuthenticationTable => _userAuthenticationTable ?? new DbRepositoryBase<UserAuthenticationEntity>(_dbContext);
         public IDbRepositoryBase<DataSyncConnectionEntity> DataSyncConnectionTable => _dataSyncConnectionTable ?? new DbRepositoryBase<DataSyncConnectionEntity>(_dbContext);
+        public IDbRepositoryBase<ImportConfigurationEntity> ImportConfigurationTable => _importConfigurationTable ?? new DbRepositoryBase<ImportConfigurationEntity>(_dbContext);
 
         public ApplicationUnitOfWork(AppDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
@@ -67,6 +70,7 @@ namespace Logic.Shared
             _userTable = new DbRepositoryBase<UserEntity>(dbContext);
             _userAuthenticationTable = new DbRepositoryBase<UserAuthenticationEntity>(dbContext);
             _dataSyncConnectionTable = new DbRepositoryBase<DataSyncConnectionEntity>(dbContext);
+            _importConfigurationTable = new DbRepositoryBase<ImportConfigurationEntity>(dbContext);
         }
 
 

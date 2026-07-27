@@ -9,6 +9,7 @@ namespace Logic.Shared
         {
             // Register shared services here
             services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
+            services.AddScoped<IUserSecurity, UserSecurity>();
         }
     }
 }

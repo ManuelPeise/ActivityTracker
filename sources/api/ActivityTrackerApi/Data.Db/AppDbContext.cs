@@ -1,4 +1,5 @@
 ﻿using Data.Db.Entities.Authentication;
+using Data.Db.Entities.Import;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Db
@@ -10,7 +11,8 @@ namespace Data.Db
         public DbSet<UserEntity> UserTable { get; set; }
         public DbSet<UserAuthenticationEntity> UserAuthenticationTable { get; set; }
         public DbSet<DataSyncConnectionEntity> DataSyncConnectionTable { get; set; }
-        
+        public DbSet<ImportConfigurationEntity> ImportConfigurationTable { get; set; }
+
         override protected void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

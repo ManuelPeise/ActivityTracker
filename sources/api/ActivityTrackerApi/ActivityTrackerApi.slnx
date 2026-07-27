@@ -4,12 +4,14 @@
   </Folder>
   <Folder Name="/02 Logic/">
     <Project Path="Logic.AuthenticationService/Logic.AuthenticationService.csproj" Id="a70a033c-9aee-429e-94c5-6033a46cb65f" />
+    <Project Path="Logic.Import/Logic.Import.csproj" Id="1fff185f-ee95-4102-bc0c-420a74041940" />
     <Project Path="Logic.Shared/Logic.Shared.csproj" />
   </Folder>
   <Folder Name="/03 Data/">
     <Project Path="Data.Db/Data.Db.csproj" />
   </Folder>
   <Folder Name="/04 Shared/">
+    <Project Path="Shared.Enums/Shared.Enums.csproj" Id="b17d933f-d014-4322-beb6-146dbecb9359" />
     <Project Path="Shared.Interfaces/Shared.Interfaces.csproj" />
     <Project Path="Shared.Models/Shared.Models.csproj" Id="40a680c3-4f4b-48f9-8e2a-297629ae1d59" />
   </Folder>

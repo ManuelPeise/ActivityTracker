@@ -138,6 +138,7 @@ namespace Logic.AuthenticationService
         {
             return new List<Claim>
             {
+                new Claim("userId", user.Id.ToString()),
                 new Claim("name", $"{user.FirstName} {user.LastName}"),
                 new Claim("emailaddress", user.EmailAddress),
                 new Claim("expiration", DateTime.UtcNow.AddSeconds(_jwtTokenModel.ExpiresInSeconds).ToString("o"))

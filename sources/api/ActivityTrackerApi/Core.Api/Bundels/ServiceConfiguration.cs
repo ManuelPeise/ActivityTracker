@@ -1,5 +1,6 @@
 ﻿using Data.Db;
 using Logic.AuthenticationService;
+using Logic.Import;
 using Logic.Shared;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -79,6 +80,7 @@ namespace Core.Api.Bundels
 
             SharedServiceRegistration.RegisterSharedServices(builder.Services);
             AuthenticationServiceRegistration.AddAuthenticationService(builder.Services);
+            ImportServiceRegistration.RegisterImportServices(builder.Services);
 
             builder.Services.AddControllers();
         }
