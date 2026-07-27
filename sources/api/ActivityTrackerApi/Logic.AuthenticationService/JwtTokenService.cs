@@ -14,10 +14,12 @@ namespace Logic.AuthenticationService
     public class JwtTokenService : IJwtTokenService
     {
         private readonly JwtTokenModel _jwtTokenModel;
+        private readonly IApplicationUnitOfWork _applicationUnitOfWork;
 
-        public JwtTokenService(IOptions<JwtTokenModel> options)
+        public JwtTokenService(IOptions<JwtTokenModel> options, IApplicationUnitOfWork applicationUnitOfWork)
         {
             _jwtTokenModel = options.Value;
+            _applicationUnitOfWork = applicationUnitOfWork;
         }
 
         public (string Jwt, string RefreshToken) GenerateTokens(UserEntity user)
@@ -25,13 +27,13 @@ namespace Logic.AuthenticationService
             return (GenerateJwt(user), GenerateRefreshToken());
         }
 
-        public async Task<TokenResponse> RefreshToken(TokenResponse request, IApplicationUnitOfWork unitOfWork)
+        public async Task<TokenResponse> RefreshToken(RefreshTokenRequest request)
         {
             var principal = GetPrincipalFromExpiredToken(request.Jwt);
 
             var email = principal.Identity!.Name ?? string.Empty;
 
-            var users = await unitOfWork.UserTable.GetBy(
+            var users = await _applicationUnitOfWork.UserTable.GetBy(
                 user => user.EmailAddress == email, 
                 true,
                 user => user.Include(u => u.UserAuthentication));
@@ -53,9 +55,9 @@ namespace Logic.AuthenticationService
 
             user.UserAuthentication.RefreshToken = newRefreshToken;
 
-            await unitOfWork.UserTable.Update(user, u => u.Id == user.Id);
+            await _applicationUnitOfWork.UserTable.Update(user, u => u.Id == user.Id);
 
-            await unitOfWork.SaveChangesAsync();
+            await _applicationUnitOfWork.SaveChangesAsync();
 
             return new TokenResponse
             {

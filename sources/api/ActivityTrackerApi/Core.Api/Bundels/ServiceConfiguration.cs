@@ -1,9 +1,13 @@
 ﻿using Data.Db;
 using Logic.AuthenticationService;
 using Logic.Shared;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Shared.Models.Authentication;
+using System.Configuration;
+using System.Text;
 
 namespace Core.Api.Bundels
 {
@@ -41,6 +45,34 @@ namespace Core.Api.Bundels
                               .AllowAnyMethod()
                               .AllowAnyHeader();
                     });
+            });
+
+            var jwtConfig = builder.Configuration.GetSection("Jwt").Get<JwtTokenModel>();
+
+            if (jwtConfig == null)
+            {
+                throw new InvalidOperationException("JWT configuration section is missing or invalid.");
+            }
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                var key = jwtConfig?.SecurityKey ?? string.Empty;
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = true,
+                    ValidAudience = jwtConfig?.Audience,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(key)),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
             });
 
             builder.Services.AddHttpContextAccessor();

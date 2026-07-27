@@ -8,11 +8,14 @@ namespace Core.Api.Bundels
         {
             if (app.Environment.IsDevelopment())
             {
-                // Development-specific configuration
+               
             }
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.UseCors(corsPolicyName);
             app.MapControllers();
 
