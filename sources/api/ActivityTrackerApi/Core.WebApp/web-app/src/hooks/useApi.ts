@@ -1,4 +1,18 @@
 import React from "react";
+import useLocalStorage, { LocalStorageKeys } from "./useLocalStorage";
+import { useLoading } from "../contexts/LoadingContext";
+
+const MIN_LOADING_DURATION_MS = 300;
+
+const waitFor = async (durationMs: number): Promise<void> => {
+  if (durationMs <= 0) {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
+};
 
 export type ApiOptions<TModel> = {
   serviceUrl: string;
@@ -11,6 +25,7 @@ type ApiResult<TRequest, TResponse> = {
   data: TResponse[] | null;
   error: Error | null;
   isLoading: boolean;
+  isDataBound: boolean;
   sendRequest: (options?: Partial<ApiOptions<TRequest>>) => Promise<void>;
   sendPostRequest: <TResult>(
     options?: Partial<ApiOptions<TRequest>>,
@@ -26,59 +41,74 @@ export const useApi = <TRequest, TResponse>(
   const [data, setData] = React.useState<TResponse[] | null>(null);
   const [error, setError] = React.useState<Error | null>(null);
 
-  const sendRequest = async (options?: Partial<ApiOptions<TRequest>>) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (options) {
-        apiOptionsRef.current = {
-          ...apiOptionsRef.current,
-          ...options,
-        };
-      }
+  const { getValue } = useLocalStorage();
+  const { showLoading, hideLoading } = useLoading();
 
-      const requestUrl = new URL(
-        `${process.env.REACT_APP_API_BASE_URL}${apiOptionsRef.current.serviceUrl}`,
-      );
+  const sendRequest = React.useCallback(
+    async (options?: Partial<ApiOptions<TRequest>>) => {
+      const requestStartedAt = Date.now();
+      setIsLoading(true);
+      setError(null);
+      showLoading();
+      try {
+        if (options) {
+          apiOptionsRef.current = {
+            ...apiOptionsRef.current,
+            ...options,
+          };
+        }
 
-      if (apiOptionsRef.current.parameters) {
-        Object.entries(apiOptionsRef.current.parameters).forEach(
-          ([key, value]) => {
-            requestUrl.searchParams.append(key, value);
-          },
+        const requestUrl = new URL(
+          `${process.env.REACT_APP_API_BASE_URL}${apiOptionsRef.current.serviceUrl}`,
         );
-      }
 
-      const response = await fetch(requestUrl.toString(), {
-        method: apiOptionsRef.current.method,
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body:
-          apiOptionsRef.current.method === "POST" && apiOptionsRef.current.model
-            ? JSON.stringify(apiOptionsRef.current.model)
-            : undefined,
-      });
-      const result = await response.json();
+        if (apiOptionsRef.current.parameters) {
+          Object.entries(apiOptionsRef.current.parameters).forEach(
+            ([key, value]) => {
+              requestUrl.searchParams.append(key, value);
+            },
+          );
+        }
 
-      if (Array.isArray(result)) {
-        setData(result as TResponse[]);
-      } else {
-        setData([result] as TResponse[]);
+        const response = await fetch(requestUrl.toString(), {
+          method: apiOptionsRef.current.method,
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            token: `Bearer ${getValue(LocalStorageKeys.JwtToken)}`,
+          },
+          body:
+            apiOptionsRef.current.method === "POST" &&
+            apiOptionsRef.current.model
+              ? JSON.stringify(apiOptionsRef.current.model)
+              : undefined,
+        });
+        const result = await response.json();
+
+        if (Array.isArray(result)) {
+          setData(result as TResponse[]);
+        } else {
+          setData([result] as TResponse[]);
+        }
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        const elapsedMs = Date.now() - requestStartedAt;
+        await waitFor(MIN_LOADING_DURATION_MS - elapsedMs);
+        setIsLoading(false);
+        hideLoading();
       }
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [getValue, hideLoading, showLoading],
+  );
 
   const sendPostRequest = async <TResult>(
     options?: Partial<ApiOptions<TRequest>>,
   ): Promise<TResult> => {
+    const requestStartedAt = Date.now();
     setIsLoading(true);
     setError(null);
+    showLoading();
 
     const apiOptions = { ...apiOptionsRef.current, ...options };
     let result: TResult;
@@ -117,7 +147,10 @@ export const useApi = <TRequest, TResponse>(
     } catch (err) {
       setError(err as Error);
     } finally {
+      const elapsedMs = Date.now() - requestStartedAt;
+      await waitFor(MIN_LOADING_DURATION_MS - elapsedMs);
       setIsLoading(false);
+      hideLoading();
     }
 
     return result!;
@@ -135,6 +168,7 @@ export const useApi = <TRequest, TResponse>(
     data,
     error,
     isLoading,
+    isDataBound: data !== null,
     sendRequest,
     sendPostRequest,
   };

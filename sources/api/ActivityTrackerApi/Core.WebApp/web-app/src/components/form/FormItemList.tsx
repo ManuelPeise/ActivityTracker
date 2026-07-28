@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from "react";
 import FormContainer, { FormButtonProps } from "./FormContainer";
-import { List } from "@mui/material";
+import { Stack } from "@mui/material";
 
 type FormItemListProps = PropsWithChildren & {
   title: string;
@@ -18,16 +18,16 @@ const FormItemList: React.FC<FormItemListProps> = (props) => {
       minWidth={minWidth}
       formButtonProps={formButtonProps}
     >
-      <List
+      <Stack
         sx={{
           display: "flex",
           flexDirection: "column",
-          gap: 3,
+          gap: 2,
           width: "100%",
         }}
       >
         {children}
-      </List>
+      </Stack>
     </FormContainer>
   );
 };

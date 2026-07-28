@@ -1,33 +1,39 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
 import HomePage from "../pages/home/HomePage";
 import { useAuth } from "../hooks/useAuth";
 import LandingPage from "../pages/landingPage/LandingPage";
-
-const UnauthenticatedRouter: React.FC = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" Component={HomePage} />
-      </Routes>
-    </Router>
-  );
-};
-
-const AuthenticatedRouter: React.FC = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" Component={LandingPage} />
-      </Routes>
-    </Router>
-  );
-};
+import HealthConnectContainer from "../pages/healthConnect/HealthConnectContainer";
 
 const AppRouter: React.FC = () => {
   const { isAuthenticated } = useAuth();
 
-  return isAuthenticated ? <AuthenticatedRouter /> : <UnauthenticatedRouter />;
+  return (
+    <Router>
+      <Routes>
+        {isAuthenticated ? (
+          <>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/health-connect"
+              element={<HealthConnectContainer />}
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        ) : (
+          <>
+            <Route path="/" element={<HomePage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        )}
+      </Routes>
+    </Router>
+  );
 };
 
 export default AppRouter;

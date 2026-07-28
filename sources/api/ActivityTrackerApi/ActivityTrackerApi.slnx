@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/01 Core/">
     <Project Path="Core.Api/Core.Api.csproj" />
+    <Project Path="Core.SyncClient/Core.SyncClient.csproj" Id="041eacc6-60da-4129-a5e6-d1d0d5faa2bd" />
+    <Project Path="Core.WebApp/Core.WebApp.csproj" Id="44a90549-d47e-4580-b0a7-dd0179e63651" />
   </Folder>
   <Folder Name="/02 Logic/">
     <Project Path="Logic.AuthenticationService/Logic.AuthenticationService.csproj" Id="a70a033c-9aee-429e-94c5-6033a46cb65f" />

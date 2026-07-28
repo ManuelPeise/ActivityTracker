@@ -4,7 +4,7 @@ using Shared.Models.Authentication;
 
 namespace Core.Api.Services.ApiControllers.Authentication
 {
-    [JwtAuthentication]
+    [WebAuthentication]
     public class TokenController: ApiControllerBase
     {
         private readonly IJwtTokenService _jwtTokenService;

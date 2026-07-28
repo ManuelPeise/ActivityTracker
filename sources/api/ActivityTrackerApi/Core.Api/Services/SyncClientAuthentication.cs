@@ -9,7 +9,7 @@ using System.Text;
 namespace Core.Api.Services
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class JwtAuthentication : Attribute, IAuthorizationFilter
+    public class SyncClientAuthentication : Attribute, IAuthorizationFilter
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
@@ -41,7 +41,9 @@ namespace Core.Api.Services
 
             var principal = ValidateJwtToken(token, jwtModel);
 
-            if (principal == null)
+            var clientType = principal?.Claims.FirstOrDefault(x => x.Type == "client-type")?.Value;
+
+            if (principal == null || clientType != "sync-client")
             {
                 context.Result = new UnauthorizedResult();
                 return;

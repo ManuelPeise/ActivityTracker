@@ -5,7 +5,7 @@ namespace Logic.Shared.Interfaces
 {
     public interface IJwtTokenService
     {
-        (string Jwt, string RefreshToken) GenerateTokens(UserEntity user);
+        (string Jwt, string RefreshToken) GenerateTokens(UserEntity user, string clientType);
         Task<TokenResponse> RefreshToken(RefreshTokenRequest request);
         int GetJwtExpireSeconds();
         JwtTokenModel GetJwtOptions();

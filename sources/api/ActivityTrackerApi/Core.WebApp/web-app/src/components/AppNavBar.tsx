@@ -2,14 +2,15 @@ import {
   Avatar,
   Box,
   Divider,
-  FormLabel,
   IconButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
-  Toolbar,
   Typography,
+  Toolbar,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import React from "react";
@@ -18,6 +19,7 @@ import { useTokens } from "../hooks/useTokens";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "../hooks/useAuth";
 import SideBar from "./SideBar";
+import MenuIcon from "@mui/icons-material/Menu";
 
 type AppNavBarProps = {
   showUserInfo: boolean;
@@ -28,6 +30,8 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
   const { theme } = useStyles();
   const { tokenModel } = useTokens();
   const { onLogout } = useAuth();
+  const muiTheme = useTheme();
+  const isDesktop = useMediaQuery(muiTheme.breakpoints.up("md"));
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
@@ -51,41 +55,37 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
   }, [tokenModel]);
 
   return (
-    <AppBar
-      sx={{ height: "64px", backgroundColor: "#000000" }}
-      position="static"
-      color="default"
-    >
+    <AppBar sx={{ height: "64px", backgroundColor: "#0f172a" }} position="sticky">
       <Toolbar
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          minHeight: "64px",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <FormLabel
-            sx={{
-              color: theme.fonts.textLight,
-              fontWeight: theme.fonts.bold,
-              paddingLeft: showUserInfo ? 10 : 0,
-            }}
-          >
-            {process.env.REACT_APP_TITLE}
-          </FormLabel>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {showUserInfo && !isDesktop && (
+            <IconButton color="inherit" onClick={() => setSidebarOpen(true)}>
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography sx={{ color: "#ffffff", fontWeight: theme.fonts.weightBold }}>
+            {process.env.REACT_APP_TITLE ?? "Activity Tracker"}
+          </Typography>
         </Box>
-        <Box sx={{ flexGrow: 1 }} />
-        <Box>
+
+        <Box sx={{ marginLeft: "auto" }}>
           {showUserInfo && (
             <>
               <IconButton onClick={handleOpen} color="inherit">
                 <Avatar
                   sx={{
-                    padding: 1,
+                    fontSize: theme.fonts.sizeSmall,
                     width: 30,
                     height: 30,
-                    bgcolor: theme.background.primary,
-                    color: theme.fonts.textDark,
+                    bgcolor: "#ffffff",
+                    color: theme.palette.textPrimary,
                   }}
                 >
                   {accountAbbreviation}
@@ -115,7 +115,12 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
 
                 <Divider />
 
-                <MenuItem onClick={onLogout}>
+                <MenuItem
+                  onClick={() => {
+                    handleClose();
+                    onLogout();
+                  }}
+                >
                   <ListItemIcon>
                     <LogoutIcon fontSize="small" />
                   </ListItemIcon>
@@ -130,7 +135,6 @@ const AppNavBar: React.FC<AppNavBarProps> = (props) => {
         isOpen={sidebarOpen}
         showSidebar={showUserInfo}
         onClose={() => setSidebarOpen(false)}
-        onOpen={() => setSidebarOpen(true)}
       />
     </AppBar>
   );

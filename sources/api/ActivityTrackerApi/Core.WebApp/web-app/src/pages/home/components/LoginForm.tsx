@@ -10,6 +10,7 @@ import { useAuth } from "../../../hooks/useAuth";
 const initialModel: AuthenticationRequest = {
   emailAddress: "",
   password: "",
+  clientType: "web-app",
 };
 
 type LoginFormProps = {
@@ -59,7 +60,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onAction }) => {
             !isValidPassword
           )
             return;
-          await onLogin({ emailAddress, password });
+          await onLogin({ emailAddress, password, clientType: "web-app" });
         },
       },
     ];
@@ -75,8 +76,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onAction }) => {
   return (
     <FormItemList
       title="Login"
-      subtitle="Login to your account"
-      minWidth="600px"
+      subtitle="Access your account securely"
+      minWidth="100%"
       formButtonProps={formButtonProps}
     >
       <FormTextField
@@ -93,8 +94,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onAction }) => {
         onChange={(key, value) => form.onChange(key, value)}
       />
       <FormLink
-        label="Create your account now."
-        description="You don't have an account?"
+        label="Create one now"
+        description="Don't have an account?"
         onAction={onAction}
       />
     </FormItemList>

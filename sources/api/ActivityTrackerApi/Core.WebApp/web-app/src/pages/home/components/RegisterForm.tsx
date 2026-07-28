@@ -113,8 +113,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onAction }) => {
   return (
     <FormItemList
       title="Register"
-      subtitle="Create your account"
-      minWidth="600px"
+      subtitle="Create a new account"
+      minWidth="100%"
       formButtonProps={formButtonProps}
     >
       <FormTextField
@@ -157,8 +157,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onAction }) => {
         onChange={(key, value) => form.onChange(key, value)}
       />
       <FormLink
-        label="Login into your account"
-        description="You already have an account?"
+        label="Sign in"
+        description="Already have an account?"
         onAction={onAction}
       />
     </FormItemList>

@@ -4,7 +4,7 @@ using Shared.Models.Import.HealthConnect;
 
 namespace Core.Api.Services.ApiControllers.Import
 {
-    [JwtAuthentication]
+    [WebAuthentication]
     public class HealthConnectController : ApiControllerBase
     {
         private readonly IHealthConnectModule _healthConnectModule;
@@ -16,7 +16,7 @@ namespace Core.Api.Services.ApiControllers.Import
             _healthConnectModule = healthConnectModule;
         }
 
-        [HttpGet("GetHealthConnectConfiguration")]
+        [HttpGet(Name = "GetHealthConnectConfiguration")]
         public async Task<HealthConnectConfiguration> GetHealthConnectConfiguration()
         {
             return await _healthConnectModule.GetHealthConnectConfigurationAsync();

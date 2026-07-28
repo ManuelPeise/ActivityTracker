@@ -34,6 +34,7 @@ export type UserRegistrationRequestModel = Omit<
 export type AuthenticationRequest = {
   emailAddress: string;
   password: string;
+  clientType: string;
 };
 
 export type TokenResponse = {
@@ -44,9 +45,13 @@ export type TokenResponse = {
 const AuthenticationContextProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
-
   const localStorage = useLocalStorage<string>();
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(() => {
+    return Boolean(
+      localStorage.getValue(LocalStorageKeys.JwtToken) &&
+      localStorage.getValue(LocalStorageKeys.RefreshToken),
+    );
+  });
 
   const registerApi = useApi<UserRegistrationRequestModel, boolean>({
     serviceUrl: "/api/Registration/RegisterUser",
@@ -69,20 +74,18 @@ const AuthenticationContextProvider: React.FC<{
 
   const onLogin = React.useCallback(
     async (request: AuthenticationRequest) => {
-      await authenticationApi
-        .sendPostRequest<TokenResponse>({
-          model: request,
-        })
-        .then((response) => {
-          if (response && response.jwt) {
-            localStorage.setValue(LocalStorageKeys.JwtToken, response.jwt);
-            localStorage.setValue(
-              LocalStorageKeys.RefreshToken,
-              response.refreshToken,
-            );
-            setIsAuthenticated(true);
-          }
-        });
+      const response = await authenticationApi.sendPostRequest<TokenResponse>({
+        model: request,
+      });
+
+      if (response && response.jwt && response.refreshToken) {
+        localStorage.setValue(LocalStorageKeys.JwtToken, response.jwt);
+        localStorage.setValue(
+          LocalStorageKeys.RefreshToken,
+          response.refreshToken,
+        );
+        setIsAuthenticated(true);
+      }
     },
     [authenticationApi, localStorage],
   );

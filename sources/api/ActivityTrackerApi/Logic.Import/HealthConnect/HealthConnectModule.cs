@@ -46,6 +46,8 @@ namespace Logic.Import.HealthConnect
         {
             try
             {
+                var updateTimeStamp = DateTime.Now;
+
                 var configurationEntity = await LoadConfigurationEntity();
 
                 var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
@@ -58,15 +60,19 @@ namespace Logic.Import.HealthConnect
                 }
 
                 config.IsActive = configurationUpdate.IsActive;
+                config.IsInitialLoad = !configurationUpdate.IsActive ? false : configurationUpdate.IsInitialLoad;
                 config.SelectedProviderId = configurationUpdate.SelectedProviderId;
                 config.Metrics = configurationUpdate.Metrics;
+                config.SelectedMetricIds = configurationUpdate.SelectedMetricIds;
                 config.Status = !config.IsActive ? ConnectionStatus.Disconnected :
                     !config.AvailableProviders.Any() || !config.AvailableProviders.Any(p => p.Id == config.SelectedProviderId) ?
                         ConnectionStatus.Pending :
                     config.Status;
+                config.UpdatedAt = updateTimeStamp.ToString("o");
+                config.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
 
                 configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
-                configurationEntity.UpdatedAt = DateTime.UtcNow;
+                configurationEntity.UpdatedAt = updateTimeStamp;
                 configurationEntity.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
 
                 await SaveConfigurationEntity(configurationEntity);
@@ -85,6 +91,8 @@ namespace Logic.Import.HealthConnect
         {
             try
             {
+                var updateTimeStamp = DateTime.Now;
+
                 if (healthConnectProviderMetricsModel == null)
                 {
                     throw new ArgumentNullException(nameof(healthConnectProviderMetricsModel));
@@ -103,7 +111,10 @@ namespace Logic.Import.HealthConnect
 
                 config.AvailableProviders = healthConnectProviderMetricsModel.Providers ?? [];
                 config.Metrics = healthConnectProviderMetricsModel.Metrics ?? [];
+                config.UpdatedAt = updateTimeStamp.ToString("o");
+                config.UpdatedBy = "System";
 
+                //[TODO] handle status
                 configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
                 configurationEntity.UpdatedAt = DateTime.UtcNow;
                 configurationEntity.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
@@ -203,6 +214,7 @@ namespace Logic.Import.HealthConnect
             var configuration = new HealthConnectConfiguration
             {
                 ConnectionGuid = Guid.NewGuid(),
+                Status = ConnectionStatus.Disconnected,
                 IsActive = false,
                 SelectedProviderId = -1
             };

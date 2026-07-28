@@ -5,185 +5,101 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Collapse,
   Box,
-  IconButton,
+  Divider,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import useStyles from "../hooks/useStyles";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import ImportExportIcon from "@mui/icons-material/ImportExport";
 import { useNavigate } from "react-router-dom";
-const DRAWER_WIDTH = 260;
-const COLLAPSED_WIDTH = 72;
+
+const DRAWER_WIDTH = 280;
 
 interface SideBarProps {
   showSidebar: boolean;
   isOpen: boolean;
   onClose: () => void;
-  onOpen: () => void;
 }
 
-type SidebarMenuState = {
-  interfaceOpen: boolean;
-};
-
-const SideBar: React.FC<SideBarProps> = ({
-  isOpen,
-  showSidebar,
-  onClose,
-  onOpen,
-}) => {
-  const [sidebarMenuState, setSidebarMenuState] =
-    React.useState<SidebarMenuState>({ interfaceOpen: false });
+const SideBar: React.FC<SideBarProps> = ({ isOpen, showSidebar, onClose }) => {
   const { theme } = useStyles();
+  const muiTheme = useTheme();
+  const isDesktop = useMediaQuery(muiTheme.breakpoints.up("md"));
   const navigate = useNavigate();
-
-  const updateSidebarMenuState = React.useCallback(
-    (newState: Partial<SidebarMenuState>) => {
-      setSidebarMenuState((prevState) => ({ ...prevState, ...newState }));
-    },
-    [],
-  );
 
   if (!showSidebar) return null;
 
+  const menuItems = [
+    { label: "Dashboard", icon: <DashboardIcon />, path: "/" },
+    {
+      label: "Health Connect",
+      icon: <FavoriteBorderIcon />,
+      path: "/health-connect",
+    },
+  ];
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (!isDesktop) {
+      onClose();
+    }
+  };
+
+  const drawerContent = (
+    <Box sx={{ height: "100%", bgcolor: "#0f172a", color: "#ffffff" }}>
+      <Box sx={{ px: 2, py: 2.5 }}>
+        <Typography sx={{ fontSize: theme.fonts.sizeSmall, opacity: 0.8 }}>
+          Navigation
+        </Typography>
+      </Box>
+      <Divider sx={{ borderColor: "rgba(255,255,255,0.12)" }} />
+      <List sx={{ px: 1.5, py: 1.5 }}>
+        {menuItems.map((item) => (
+          <ListItemButton
+            key={item.path}
+            onClick={() => handleNavigate(item.path)}
+            sx={{
+              borderRadius: theme.borders.radiusMedium,
+              mb: 0.5,
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" },
+            }}
+          >
+            <ListItemIcon sx={{ color: "#ffffff", minWidth: 36 }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.label}
+              slotProps={{
+                primary: { sx: { fontSize: theme.fonts.sizeSmall } },
+              }}
+            />
+          </ListItemButton>
+        ))}
+      </List>
+    </Box>
+  );
+
   return (
     <Drawer
-      variant="permanent"
+      variant={isDesktop ? "permanent" : "temporary"}
+      open={isDesktop ? true : isOpen}
+      onClose={onClose}
+      ModalProps={{ keepMounted: true }}
       sx={{
-        width: isOpen ? DRAWER_WIDTH : COLLAPSED_WIDTH,
-        backgroundColor: "#000000",
+        width: DRAWER_WIDTH,
         flexShrink: 0,
-        transition: (theme) =>
-          theme.transitions.create("width", {
-            duration: theme.transitions.duration.standard,
-          }),
-
         "& .MuiDrawer-paper": {
-          width: isOpen ? DRAWER_WIDTH : COLLAPSED_WIDTH,
-          backgroundColor: "#000000",
-          overflowX: "hidden",
-          transition: (theme) =>
-            theme.transitions.create("width", {
-              duration: theme.transitions.duration.standard,
-            }),
+          width: DRAWER_WIDTH,
+          border: "none",
+          mt: isDesktop ? "64px" : 0,
+          height: isDesktop ? "calc(100% - 64px)" : "100%",
         },
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: !isOpen ? "center" : "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <IconButton
-          sx={{
-            color: theme.fonts.textLight,
-          }}
-          onClick={isOpen ? onClose : onOpen}
-        >
-          {isOpen ? (
-            <ArrowBackIosNewIcon
-              sx={{
-                "&:hover": {
-                  color: theme.fonts.disabled,
-                },
-              }}
-            />
-          ) : (
-            <ArrowForwardIosIcon
-              sx={{
-                "&:hover": {
-                  color: theme.fonts.disabled,
-                },
-              }}
-            />
-          )}
-        </IconButton>
-      </Box>
-      <List
-        sx={{
-          width: "100%",
-          maxWidth: 360,
-          bgcolor: "#000000",
-        }}
-      >
-        <ListItemButton
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-          onClick={() => navigate("/")}
-        >
-          <ListItemIcon>
-            <DashboardIcon
-              sx={{ color: theme.fonts.textLight, width: 30, height: 30 }}
-            />
-          </ListItemIcon>
-          {isOpen && (
-            <ListItemText
-              sx={{ color: theme.fonts.textLight }}
-              primary="Dashboard"
-            />
-          )}
-        </ListItemButton>
-
-        {/* Interfaces */}
-
-        <ListItemButton
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-          }}
-          onClick={() =>
-            updateSidebarMenuState({
-              interfaceOpen: !sidebarMenuState.interfaceOpen,
-            })
-          }
-        >
-          <ListItemIcon>
-            <ImportExportIcon
-              sx={{ color: theme.fonts.textLight, width: 30, height: 30 }}
-            />
-          </ListItemIcon>
-          {isOpen && (
-            <ListItemText
-              sx={{ color: theme.fonts.textLight }}
-              primary="Interfaces"
-            />
-          )}
-          {isOpen && sidebarMenuState.interfaceOpen && (
-            <ExpandLess sx={{ color: theme.fonts.textLight }} />
-          )}
-          {isOpen && !sidebarMenuState.interfaceOpen && (
-            <ExpandMore sx={{ color: theme.fonts.textLight }} />
-          )}
-        </ListItemButton>
-
-        <Collapse
-          in={isOpen && sidebarMenuState.interfaceOpen}
-          timeout="auto"
-          unmountOnExit
-        >
-          <List disablePadding>
-            <ListItemButton
-              sx={{ pl: 4 }}
-              onClick={() => navigate("/connections")}
-            >
-              <ListItemText
-                sx={{ color: theme.fonts.textLight }}
-                primary="Connections"
-              />
-            </ListItemButton>
-          </List>
-        </Collapse>
-      </List>
+      {drawerContent}
     </Drawer>
   );
 };

@@ -1,4 +1,4 @@
-import { ListItem, ListItemText, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import useStyles from "../../hooks/useStyles";
 
 interface FormTextFieldProps<TModel> {
@@ -15,47 +15,24 @@ function FormTextField<TModel>(props: FormTextFieldProps<TModel>) {
 
   const { theme } = useStyles();
   return (
-    <ListItem
+    <TextField
+      fullWidth
+      size="small"
+      label={label}
+      variant="outlined"
+      type={isPassword ? "password" : "text"}
+      value={value ?? ""}
+      disabled={disabled}
+      onChange={(e) =>
+        onChange(propertyName, e.target.value as TModel[keyof TModel])
+      }
       sx={{
-        width: "100%",
-        padding: 0,
-        margin: 0,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: ".1rem",
+        "& .MuiInputBase-root": {
+          borderRadius: theme.borders.radiusMedium,
+          backgroundColor: theme.palette.surfaceAlt,
+        },
       }}
-    >
-      <ListItemText
-        slotProps={{
-          primary: {
-            sx: {
-              width: "100%",
-              fontSize: theme.fonts.sizeMedium,
-              color: theme.fonts.textDark,
-            },
-          },
-        }}
-        primary={label}
-      />
-      <TextField
-        sx={{
-          width: "100%",
-          backgroundColor: "transparent",
-          borderRadius: 0,
-          "&:hover": {
-            borderColor: theme.background.primary,
-          },
-        }}
-        variant="standard"
-        type={isPassword ? "password" : "text"}
-        value={value}
-        disabled={disabled}
-        onChange={(e) =>
-          onChange(propertyName, e.target.value as TModel[keyof TModel])
-        }
-      />
-    </ListItem>
+    />
   );
 }
 

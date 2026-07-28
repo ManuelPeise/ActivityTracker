@@ -22,9 +22,9 @@ namespace Logic.AuthenticationService
             _applicationUnitOfWork = applicationUnitOfWork;
         }
 
-        public (string Jwt, string RefreshToken) GenerateTokens(UserEntity user)
+        public (string Jwt, string RefreshToken) GenerateTokens(UserEntity user, string clientType)
         {
-            return (GenerateJwt(user), GenerateRefreshToken());
+            return (GenerateJwt(user, clientType), GenerateRefreshToken());
         }
 
         public async Task<TokenResponse> RefreshToken(RefreshTokenRequest request)
@@ -50,7 +50,7 @@ namespace Logic.AuthenticationService
                 throw new SecurityTokenException("Invalid refresh token");
             }
 
-            var newAccessToken = GenerateJwt(user);
+            var newAccessToken = GenerateJwt(user, request.ClientType);
             var newRefreshToken = GenerateRefreshToken();
 
             user.UserAuthentication.RefreshToken = newRefreshToken;
@@ -76,12 +76,12 @@ namespace Logic.AuthenticationService
             return _jwtTokenModel;
         }
 
-        private string GenerateJwt(UserEntity appUserEntity)
+        private string GenerateJwt(UserEntity appUserEntity, string clientType)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtTokenModel.SecurityKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = GetUserClaims(appUserEntity);
+            var claims = GetUserClaims(appUserEntity, clientType);
 
             var token = new JwtSecurityToken(
                 issuer: _jwtTokenModel.Issuer,
@@ -134,13 +134,14 @@ namespace Logic.AuthenticationService
             return principal;
         }
 
-        private List<Claim> GetUserClaims(UserEntity user)
+        private List<Claim> GetUserClaims(UserEntity user, string clientType)
         {
             return new List<Claim>
             {
                 new Claim("userId", user.Id.ToString()),
                 new Claim("name", $"{user.FirstName} {user.LastName}"),
                 new Claim("emailaddress", user.EmailAddress),
+                new Claim("client-type", clientType),
                 new Claim("expiration", DateTime.UtcNow.AddSeconds(_jwtTokenModel.ExpiresInSeconds).ToString("o"))
             };
         }

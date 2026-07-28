@@ -30,14 +30,17 @@ export const useTokens = () => {
     }
     setJwtToken({ jwt: storedJwtToken, refresh: storedRefreshToken });
 
-    if (storedJwtToken) {
-      const tokenPayload = JSON.parse(atob(storedJwtToken.split(".")[1]));
+    try {
+      const payload = storedJwtToken.split(".")[1];
+      const tokenPayload = JSON.parse(atob(payload));
 
       setTokenModel({
         name: tokenPayload.name,
         emailaddress: tokenPayload.emailaddress,
         expiration: tokenPayload.exp,
       });
+    } catch {
+      setTokenModel(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

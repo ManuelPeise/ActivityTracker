@@ -49,7 +49,7 @@ namespace Logic.AuthenticationService
                     return null;
                 }
 
-                var (accessToken, refreshToken) = _jwtTokenService.GenerateTokens(user);
+                var (accessToken, refreshToken) = _jwtTokenService.GenerateTokens(user, request.ClientType);
                 var isUpdated = false;
                 
                 if (accessToken != null)

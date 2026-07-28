@@ -2,5 +2,6 @@
 {
     public class RefreshTokenRequest: TokenResponse
     {
+        public string ClientType { get; set; } = string.Empty;
     }
 }
