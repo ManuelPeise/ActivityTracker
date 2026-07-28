@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "../pages/home/HomePage";
 import { useAuth } from "../hooks/useAuth";
 import LandingPage from "../pages/landingPage/LandingPage";
-import Interface from "../pages/interfaces/Interface";
 
 const UnauthenticatedRouter: React.FC = () => {
   return (
@@ -20,7 +19,6 @@ const AuthenticatedRouter: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/" Component={LandingPage} />
-        <Route path="/connections" Component={Interface} />
       </Routes>
     </Router>
   );
