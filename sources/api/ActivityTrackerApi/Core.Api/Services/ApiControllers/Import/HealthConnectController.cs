@@ -4,6 +4,7 @@ using Shared.Models.Import.HealthConnect;
 
 namespace Core.Api.Services.ApiControllers.Import
 {
+    [JwtAuthentication]
     public class HealthConnectController : ApiControllerBase
     {
         private readonly IHealthConnectModule _healthConnectModule;
@@ -25,6 +26,22 @@ namespace Core.Api.Services.ApiControllers.Import
         public async Task<HealthConnectConfiguration> UpdateHealthConnectConfiguration([FromBody] HealthConnectConfiguration configurationUpdate)
         {
             return await _healthConnectModule.UpdateConfiguration(configurationUpdate);
+        }
+
+        [HttpPost(Name = "UpdateHealthConnectProviderAndMetrics")]
+        public async Task<IActionResult> UpdateHealthConnectProviderAndMetrics([FromBody] HealthConnectProviderMetricsModel providerMetricsModel)
+        {
+            await _healthConnectModule.UpdateProviderAndMetrics(providerMetricsModel);
+
+            return Ok();
+        }
+
+        [HttpPost(Name = "ImportHealthConnectData")]
+        public async Task<IActionResult> ImportHealthConnectData([FromBody] HealthConnectImportModel importModel)
+        {
+            await _healthConnectModule.ImportHealthData(importModel);
+
+            return Ok();
         }
     }
 }

@@ -8,5 +8,7 @@ namespace Shared.Interfaces
     {
         Task<HealthConnectConfiguration> GetHealthConnectConfigurationAsync();
         Task<HealthConnectConfiguration> UpdateConfiguration(HealthConnectConfiguration configurationUpdate);
+        Task UpdateProviderAndMetrics(HealthConnectProviderMetricsModel healthConnectProviderMetricsModel);
+        Task ImportHealthData(HealthConnectImportModel importModel);
     }
 }

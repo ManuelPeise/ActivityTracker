@@ -48,11 +48,6 @@ namespace Logic.Import.HealthConnect
             {
                 var configurationEntity = await LoadConfigurationEntity();
 
-                if (configurationEntity == null)
-                {
-                    throw new InvalidOperationException($"HealthConnect configuration not found for user {_userSecurity.CurrentUser.Id}.");
-                }
-
                 var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
                     GetDefaultHealthConnectConfiguration() :
                     JsonConvert.DeserializeObject<HealthConnectConfiguration>(configurationEntity.ConfigurationJson);
@@ -85,6 +80,99 @@ namespace Logic.Import.HealthConnect
                 throw new ApplicationException($"An error occurred while updating HealthConnect configuration for user {_userSecurity.CurrentUser.Id}.", exception);
             }
         }
+
+        public async Task UpdateProviderAndMetrics(HealthConnectProviderMetricsModel healthConnectProviderMetricsModel)
+        {
+            try
+            {
+                if (healthConnectProviderMetricsModel == null)
+                {
+                    throw new ArgumentNullException(nameof(healthConnectProviderMetricsModel));
+                }
+
+                var configurationEntity = await LoadConfigurationEntity();
+
+                var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
+                    GetDefaultHealthConnectConfiguration() :
+                    JsonConvert.DeserializeObject<HealthConnectConfiguration>(configurationEntity.ConfigurationJson);
+
+                if (config == null || !config.IsActive)
+                {
+                    throw new InvalidOperationException($"HealthConnect configuration is invalid or inactive for user {_userSecurity.CurrentUser.Id}.");
+                }
+
+                config.AvailableProviders = healthConnectProviderMetricsModel.Providers ?? [];
+                config.Metrics = healthConnectProviderMetricsModel.Metrics ?? [];
+
+                configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
+                configurationEntity.UpdatedAt = DateTime.UtcNow;
+                configurationEntity.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
+
+                await SaveConfigurationEntity(configurationEntity);
+
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error occurred while updating HealthConnect providers and metrics for user {UserId}.", _userSecurity.CurrentUser.Id);
+
+                throw new ApplicationException($"An error occurred while updating HealthConnect providers and metrics for user {_userSecurity.CurrentUser.Id}.", exception);
+            }
+        }
+
+        public async Task ImportHealthData(HealthConnectImportModel importModel)
+        {
+            try
+            {
+                if (importModel == null)
+                {
+                    throw new ArgumentNullException(nameof(importModel));
+                }
+
+                var configurationEntity = await LoadConfigurationEntity();
+
+                var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
+                    GetDefaultHealthConnectConfiguration() :
+                    JsonConvert.DeserializeObject<HealthConnectConfiguration>(configurationEntity.ConfigurationJson);
+
+                if (config == null)
+                {
+                    throw new InvalidOperationException($"HealthConnect configuration is invalid for user {_userSecurity.CurrentUser.Id}.");
+                }
+
+                if (!config.IsActive)
+                {
+                    _logger.LogWarning("HealthConnect import attempted while connection is inactive for user {UserId}.", _userSecurity.CurrentUser.Id);
+
+                    return;
+                }
+
+                EnsureConfigIsUpToDate(config, importModel, out bool isModified);
+
+                if (isModified)
+                {
+                    configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
+
+                    await SaveConfigurationEntity(configurationEntity);
+                }
+
+                var provider = config.AvailableProviders.FirstOrDefault(p => p.Id == config.SelectedProviderId);
+
+                if (provider == null)
+                {
+                    _logger.LogWarning("Selected provider with ID {ProviderId} not found in available providers for user {UserId}.", config.SelectedProviderId, _userSecurity.CurrentUser.Id);
+
+                    return;
+                }
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error occurred while importing HealthConnect data for user {UserId}.", _userSecurity.CurrentUser.Id);
+
+                throw new ApplicationException($"An error occurred while importing HealthConnect data for user {_userSecurity.CurrentUser.Id}.", exception);
+            }
+        }
+
+    
 
         private async Task<ImportConfigurationEntity> LoadConfigurationEntity()
         {
@@ -122,6 +210,52 @@ namespace Logic.Import.HealthConnect
             return configuration;
         }
 
+        private void EnsureConfigIsUpToDate(HealthConnectConfiguration config, HealthConnectImportModel importModel, out bool isModified)
+        {
+            config.AvailableProviders ??= [];
+            config.Metrics ??= [];
+
+            var providers = importModel.Providers ?? [];
+            var metrics = importModel.Metrics ?? [];
+
+            isModified = false;
+
+            var existingProviderNames = new HashSet<string>(config.AvailableProviders
+                .Where(provider => !string.IsNullOrWhiteSpace(provider.Name))
+                .Select(provider => provider.Name), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var provider in providers)
+            {
+                if (string.IsNullOrWhiteSpace(provider.Name))
+                {
+                    continue;
+                }
+
+                if (existingProviderNames.Add(provider.Name))
+                {
+                    config.AvailableProviders.Add(provider);
+                    isModified = true;
+                }
+            }
+
+            var existingMetricNames = new HashSet<string>(config.Metrics
+                .Where(metric => !string.IsNullOrWhiteSpace(metric.Name))
+                .Select(metric => metric.Name), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var metric in metrics)
+            {
+                if (string.IsNullOrWhiteSpace(metric.Name))
+                {
+                    continue;
+                }
+
+                if (existingMetricNames.Add(metric.Name))
+                {
+                    config.Metrics.Add(metric);
+                    isModified = true;
+                }
+            }
+        }
         private async Task SaveConfigurationEntity(ImportConfigurationEntity configurationEntity)
         {
             var dbIsModified = false;
