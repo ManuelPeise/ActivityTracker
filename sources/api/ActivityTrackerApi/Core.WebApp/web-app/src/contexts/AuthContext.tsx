@@ -54,7 +54,7 @@ const AuthenticationContextProvider: React.FC<{
   });
 
   const registerApi = useApi<UserRegistrationRequestModel, boolean>({
-    serviceUrl: "/api/Registration/RegisterUser",
+    serviceUrl: "Registration/RegisterUser",
     method: "POST",
   });
 
@@ -68,7 +68,7 @@ const AuthenticationContextProvider: React.FC<{
   );
 
   const authenticationApi = useApi<AuthenticationRequest, TokenResponse>({
-    serviceUrl: "/api/Authentication/AuthenticateUser",
+    serviceUrl: "Authentication/AuthenticateUser",
     method: "POST",
   });
 

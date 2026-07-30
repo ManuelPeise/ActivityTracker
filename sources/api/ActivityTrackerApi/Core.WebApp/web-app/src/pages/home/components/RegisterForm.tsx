@@ -24,6 +24,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onAction }) => {
   const form = useForm<UserRegistration>(initialModel);
 
   const { onRegister } = useAuth();
+
   const {
     firstName,
     lastName,

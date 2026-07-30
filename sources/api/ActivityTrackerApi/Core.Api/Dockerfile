@@ -13,6 +13,13 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Core.Api/Core.Api.csproj", "Core.Api/"]
+COPY ["Data.Db/Data.Db.csproj", "Data.Db/"]
+COPY ["Logic.AuthenticationService/Logic.AuthenticationService.csproj", "Logic.AuthenticationService/"]
+COPY ["Logic.Import/Logic.Import.csproj", "Logic.Import/"]
+COPY ["Logic.Shared/Logic.Shared.csproj", "Logic.Shared/"]
+COPY ["Shared.Interfaces/Shared.Interfaces.csproj", "Shared.Interfaces/"]
+COPY ["Shared.Models/Shared.Models.csproj", "Shared.Models/"]
+COPY ["Shared.Enums/Shared.Enums.csproj", "Shared.Enums/"]
 RUN dotnet restore "./Core.Api/Core.Api.csproj"
 COPY . .
 WORKDIR "/src/Core.Api"
