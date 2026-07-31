@@ -11,5 +11,7 @@ namespace Logic.Shared.Interfaces
         public IDbRepositoryBase<HealthConnectMetricMappingEntity> HealthConnectMetricMappingTable {  get; }
         public IDbRepositoryBase<HealthConnectSourceEntity> HealthConnectSourceTable {  get; }
         public IDbRepositoryBase<HealthConnectSourceMappingEntity> HealthConnectSourceMappingTable {  get; }
+
+        Task SaveChanges(string userName = "System");
     }
 }

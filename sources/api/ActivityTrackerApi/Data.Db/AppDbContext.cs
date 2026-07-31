@@ -100,6 +100,7 @@ namespace Data.Db
                 entity.Property(e => e.IsActive).IsRequired();
                 entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.UserId).IsRequired();
                 entity.Property(e => e.MetricId).IsRequired();
 
                 entity.HasOne(e => e.MetricEntity)
@@ -128,6 +129,7 @@ namespace Data.Db
                 entity.Property(e => e.IsActive).IsRequired();
                 entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.UserId).IsRequired();
                 entity.Property(e => e.SourceId).IsRequired();
 
                 entity.HasOne(e => e.SourceEntity)

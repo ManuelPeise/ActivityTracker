@@ -26,11 +26,13 @@ namespace Logic.Shared.Repositories
         public IDbRepositoryBase<HealthConnectSourceMappingEntity> HealthConnectSourceMappingTable =>
             _healthConnectSourceMappingTable ?? new DbRepositoryBase<HealthConnectSourceMappingEntity>(DbContext);
 
-        public HealthConnectRepository(AppDbContext dbContext, HttpContext httpContext)
-            : base(dbContext, httpContext)
+        public HealthConnectRepository(AppDbContext dbContext, IHttpContextAccessor httpContextAccessor)
+            : base(dbContext, httpContextAccessor)
         {
             InitializeRepositories(dbContext);
         }
+
+        public async Task SaveChanges(string userName = "System") => await SaveChangesAsync(userName);
 
         private void InitializeRepositories(AppDbContext dbContext)
         {

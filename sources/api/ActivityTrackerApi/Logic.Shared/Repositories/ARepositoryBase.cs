@@ -8,19 +8,19 @@ namespace Logic.Shared.Repositories
     public class ARepositoryBase
     {
         protected readonly AppDbContext DbContext;
-        private readonly HttpContext _httpContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ARepositoryBase(AppDbContext dbContext, HttpContext httpContext)
+        public ARepositoryBase(AppDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             DbContext = dbContext;
-            _httpContext = httpContext ?? throw new ArgumentNullException(nameof(httpContext));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        protected async Task SaveChangesAsync(string userName = "System")
+        public async Task SaveChangesAsync(string userName = "System")
         {
             if (DbContext == null) throw new ObjectDisposedException(nameof(ApplicationUnitOfWork));
 
-            var user = _httpContext.User.Identity?.Name ?? userName;
+            var user = _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? userName;
 
             var now = DateTime.UtcNow;
 

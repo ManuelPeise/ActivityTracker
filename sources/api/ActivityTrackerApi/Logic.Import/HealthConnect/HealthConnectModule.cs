@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Shared.Enums;
 using Shared.Interfaces;
 using Shared.Models.Import.HealthConnect;
-using Newtonsoft.Json;
 using Data.Db.Entities.HealthConnect;
 
 namespace Logic.Import.HealthConnect
@@ -25,6 +24,9 @@ namespace Logic.Import.HealthConnect
         {
             try
             {
+                var metrics = await EnsureHealthConnectMetricAdded();
+                var sources = await GetHealthConnectSourcesMappings();
+                
                 var configurationEntity = await LoadConfigurationEntity();
 
                 if(configurationEntity == null)
@@ -32,7 +34,7 @@ namespace Logic.Import.HealthConnect
                     configurationEntity = GetDefaultHealthConnectConfigurationEntity();
                 }
 
-                return ToConfigurationModel(configurationEntity);
+                return ToConfigurationModel(configurationEntity, metrics, sources);
 
             }
             catch (Exception exception)
@@ -40,6 +42,32 @@ namespace Logic.Import.HealthConnect
                 _logger.LogError(exception, "Error occurred while fetching HealthConnect configuration for user {UserId}.", _userSecurity.CurrentUser.Id);
 
                 throw new ApplicationException($"An error occurred while fetching HealthConnect configuration for user {_userSecurity.CurrentUser.Id}.", exception);
+            }
+        }
+
+        public async Task<HealthConnectConfigurationBase> GetHealthConnectConfigurationBaseAsync()
+        {
+            try
+            {
+                var configurationEntity = await LoadConfigurationEntity();
+                
+                if (configurationEntity == null)
+                {
+                    configurationEntity = GetDefaultHealthConnectConfigurationEntity();
+                }
+
+                return new HealthConnectConfigurationBase
+                {
+                    DeviceId = configurationEntity.DeviceId,
+                    DeviceName = configurationEntity.DeviceName,
+                    SyncClientId = configurationEntity.SyncClientId,
+                    IsActive = configurationEntity.IsActive,
+                };
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error occurred while fetching HealthConnect base configuration for user {UserId}.", _userSecurity.CurrentUser.Id);
+                throw new ApplicationException($"An error occurred while fetching HealthConnect base configuration for user {_userSecurity.CurrentUser.Id}.", exception);
             }
         }
 
@@ -56,18 +84,36 @@ namespace Logic.Import.HealthConnect
                     configurationEntity = GetDefaultHealthConnectConfigurationEntity();
                 }
 
+                var metricMapper = new HealthConnectMetricMapper(_applicationUnitOfWork.HealthConnectRepository, _userSecurity.CurrentUser.Id);
+
+                var metrics = await metricMapper.GetMappingsAsync();
+                var updatedMetricMappings = await metricMapper.UpdateMappingAsync(configurationUpdate.MetricMappings);
+
+                var sourceMapper = new HealthConnectSourceMapper(_applicationUnitOfWork.HealthConnectRepository, _userSecurity.CurrentUser.Id);
+                var sources = await sourceMapper.GetMappingsAsync();
+                var updatedSourceMappings = await sourceMapper.UpdateMappingAsync(configurationUpdate.SourceMappings);
+
                 configurationEntity.IsActive = configurationUpdate.IsActive;
+
+                if(configurationUpdate.IsActive && string.IsNullOrEmpty(configurationEntity.SyncClientId))
+                {
+                    configurationEntity.SyncClientId = Guid.NewGuid().ToString();
+                }
+
                 configurationEntity.DeviceId = configurationUpdate.DeviceId;
                 configurationEntity.DeviceName = configurationUpdate.DeviceName;
                 configurationEntity.Status = configurationUpdate.Status;
+                
+                await UpdateMetricMappingEntities(configurationEntity.HealthConnectMetricMappings, updatedMetricMappings);
+                await UpdateSourceMappingEntities(configurationEntity.HealthConnectSourceMappings, updatedSourceMappings);
+
+                configurationEntity.HealthConnectSourceMappings = new List<HealthConnectSourceMappingEntity>();
+
                 configurationEntity.UpdatedAt = updateTimeStamp;
                 configurationEntity.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
-                configurationEntity.HealthConnectMetricMappings = new List<HealthConnectMetricMappingEntity>();
-                configurationEntity.HealthConnectSourceMappings = new List<HealthConnectSourceMappingEntity>();
-               
                 await SaveConfigurationEntity(configurationEntity);
 
-                return ToConfigurationModel(configurationEntity);
+                return ToConfigurationModel(configurationEntity, metrics, sources);
             }
             catch (Exception exception)
             {
@@ -77,14 +123,53 @@ namespace Logic.Import.HealthConnect
             }
         }
 
-        public Task UpdateProviderAndMetrics(HealthConnectProviderMetricsModel healthConnectProviderMetricsModel)
+        public async Task UpdateConfigurationBase(HealthConnectConfigurationBase configurationBase)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var configurationEntity = await LoadConfigurationEntity();
+
+                if (configurationEntity == null)
+                {
+                    configurationEntity = GetDefaultHealthConnectConfigurationEntity();
+                }
+
+                if (configurationBase.Sources.Any())
+                {
+                    var sourceMapper = new HealthConnectSourceMapper(_applicationUnitOfWork.HealthConnectRepository, _userSecurity.CurrentUser.Id);
+
+                    await sourceMapper.AddMappingsAsync(configurationBase.Sources);
+                }
+
+                configurationEntity.DeviceId = configurationBase?.DeviceId ?? string.Empty;
+                configurationEntity.DeviceName = configurationBase?.DeviceName ?? string.Empty;
+
+                await SaveConfigurationEntity(configurationEntity);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error occurred while updating HealthConnect sources for user {UserId}.", _userSecurity.CurrentUser.Id);
+                throw new ApplicationException($"An error occurred while updating HealthConnect sources for user {_userSecurity.CurrentUser.Id}.", exception);
+            }
         }
 
         public async Task ImportHealthData(HealthConnectImportModel importModel)
         {
            
+        }
+
+        private async Task<HashSet<HealthConnectMetricMapping>> EnsureHealthConnectMetricAdded()
+        {
+            var metricMapper = new HealthConnectMetricMapper(_applicationUnitOfWork.HealthConnectRepository, _userSecurity.CurrentUser.Id);
+
+            return await metricMapper.AddMappingsAsync();
+        }
+
+        private async Task<HashSet<HealthConnectSourceMapping>> GetHealthConnectSourcesMappings()
+        {
+            var sourceMapper = new HealthConnectSourceMapper(_applicationUnitOfWork.HealthConnectRepository, _userSecurity.CurrentUser.Id);
+
+            return await sourceMapper.GetMappingsAsync();
         }
 
         private async Task<HealthConnectConfigurationEntity> LoadConfigurationEntity()
@@ -126,53 +211,6 @@ namespace Logic.Import.HealthConnect
             return configurationEntity;
         }
 
-        private void EnsureConfigIsUpToDate(HealthConnectConfiguration config, HealthConnectImportModel importModel, out bool isModified)
-        {
-            config.AvailableSources ??= [];
-            config.Metrics ??= [];
-
-            var providers = importModel.Providers ?? [];
-            var metrics = importModel.Metrics ?? [];
-
-            isModified = false;
-
-            var existingSourceNames = new HashSet<string>(config.AvailableSources
-                .Where(source => !string.IsNullOrWhiteSpace(source.Name))
-                .Select(source => source.Name), StringComparer.OrdinalIgnoreCase);
-
-            foreach (var source in providers)
-            {
-                if (string.IsNullOrWhiteSpace(source.Name))
-                {
-                    continue;
-                }
-
-                if (existingSourceNames.Add(source.Name))
-                {
-                    config.AvailableSources.Add(source);
-                    isModified = true;
-                }
-            }
-
-            var existingMetricNames = new HashSet<string>(config.Metrics
-                .Where(metric => !string.IsNullOrWhiteSpace(metric.Name))
-                .Select(metric => metric.Name), StringComparer.OrdinalIgnoreCase);
-
-            foreach (var metric in metrics)
-            {
-                if (string.IsNullOrWhiteSpace(metric.Name))
-                {
-                    continue;
-                }
-
-                if (existingMetricNames.Add(metric.Name))
-                {
-                    config.Metrics.Add(metric);
-                    isModified = true;
-                }
-            }
-        }
-        
         private async Task SaveConfigurationEntity(HealthConnectConfigurationEntity configurationEntity)
         {
             var dbIsModified = false;
@@ -192,27 +230,61 @@ namespace Logic.Import.HealthConnect
 
             if (dbIsModified)
             {
-                await _applicationUnitOfWork.SaveChangesAsync();
+                await _applicationUnitOfWork.HealthConnectRepository.SaveChanges(_userSecurity.CurrentUser.EmailAddress);
             }
         }
 
-        private HealthConnectConfiguration ToConfigurationModel(HealthConnectConfigurationEntity configurationEntity)
+        private HealthConnectConfiguration ToConfigurationModel(
+            HealthConnectConfigurationEntity configurationEntity, 
+            HashSet<HealthConnectMetricMapping> metrics,
+            HashSet<HealthConnectSourceMapping> sources)
         {
             return new HealthConnectConfiguration
             {
                 DeviceId = configurationEntity.DeviceId,
                 DeviceName = configurationEntity.DeviceName,
+                SyncClientId = configurationEntity.SyncClientId,
                 Status = configurationEntity.Status,
                 IsActive = configurationEntity.IsActive,
-                SelectedSourceId = -1,
-                AvailableSources = new List<HealthConnectSource>(),
-                Metrics = new List<HealthConnectMetric>(),
-                SelectedMetricIds = new List<int>(),
+                MetricMappings = metrics,
+                SourceMappings = sources,
                 UpdatedAt = configurationEntity?.UpdatedAt?.ToString("o") ?? string.Empty,
                 UpdatedBy = configurationEntity?.UpdatedBy ?? string.Empty,
             };
         }
 
-        
+        private async Task UpdateMetricMappingEntities(
+           ICollection<HealthConnectMetricMappingEntity> mappingEntities,
+           HashSet<HealthConnectMetricMapping> updatedMetricMappings)
+        {
+            foreach (var item in mappingEntities)
+            {
+                var update = updatedMetricMappings.FirstOrDefault(x => x.MetricId == item.MetricId);
+
+                if (update != null)
+                {
+                    item.DisplayName = update.DisplayName;
+                    item.IsGranted = update.IsGranted;
+                    item.IsActive = update.IsActive;
+                }
+            }
+        }
+
+        private async Task UpdateSourceMappingEntities(
+            ICollection<HealthConnectSourceMappingEntity> mappingEntities, 
+            HashSet<HealthConnectSourceMapping> updatedSourceMappings)
+        {
+            foreach (var item in mappingEntities)
+            {
+                var update = updatedSourceMappings.FirstOrDefault(x => x.SourceId == item.SourceId);
+
+                if (update != null)
+                {
+                    item.DisplayName = update.DisplayName;
+                    item.IsActive = update.IsActive;
+                }
+            }
+        }
+
     }
 }

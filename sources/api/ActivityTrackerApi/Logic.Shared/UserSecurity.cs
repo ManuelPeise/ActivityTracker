@@ -1,21 +1,33 @@
-﻿using Data.Db.Entities.Authentication;
+using Data.Db;
+using Data.Db.Entities.Authentication;
 using Logic.Shared.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Logic.Shared
 {
     public class UserSecurity : IUserSecurity
     {
         private readonly IHttpContextAccessor _contextAccessor;
-        private readonly IApplicationUnitOfWork _applicationUnitOfWork;
-        public CurrentUserModel CurrentUser { get; private set; } = new CurrentUserModel { Id = 0, EmailAddress = string.Empty };
-        
-        public UserSecurity(IHttpContextAccessor contextAccessor, IApplicationUnitOfWork applicationUnitOfWork)
+        private readonly AppDbContext _dbContext;
+        private CurrentUserModel? _currentUser;
+
+        public CurrentUserModel CurrentUser 
+        { 
+            get
+            {
+                if (_currentUser == null)
+                {
+                    _currentUser = LoadCurrentUserModel().GetAwaiter().GetResult();
+                }
+                return _currentUser;
+            }
+        }
+
+        public UserSecurity(IHttpContextAccessor contextAccessor, AppDbContext dbContext)
         {
             _contextAccessor = contextAccessor;
-            _applicationUnitOfWork = applicationUnitOfWork;
-
-            Task.Run(async () => CurrentUser = await LoadCurrentUserModel()).Wait();
+            _dbContext = dbContext;
         }
 
         private async Task<CurrentUserModel> LoadCurrentUserModel()
@@ -24,11 +36,16 @@ namespace Logic.Shared
             {
                 var currentUserId = GetCurrentUserId();
 
-                var userEntity = await _applicationUnitOfWork.UserRepository.UserTable.GetById(currentUserId);
+                if (currentUserId == 0)
+                {
+                    return new CurrentUserModel { Id = 0, EmailAddress = string.Empty };
+                }
+
+                var userEntity = await _dbContext.UserTable.FirstOrDefaultAsync(u => u.Id == currentUserId);
 
                 if(userEntity == null)
                 {
-                    throw new InvalidOperationException("Could not load current user.");
+                    return new CurrentUserModel { Id = 0, EmailAddress = string.Empty };
                 }
 
                 return new CurrentUserModel
@@ -46,7 +63,7 @@ namespace Logic.Shared
         private int GetCurrentUserId()
         {
             var userId = _contextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            
+
             return userId != null ? int.Parse(userId) : 0;
         }
     }

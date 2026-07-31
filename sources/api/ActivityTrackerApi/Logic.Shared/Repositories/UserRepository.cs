@@ -9,14 +9,13 @@ namespace Logic.Shared.Repositories
 {
     public class UserRepository : ARepositoryBase, IUserRepository
     {
-       
         private IDbRepositoryBase<UserEntity>? _userTable;
         private IDbRepositoryBase<UserAuthenticationEntity>? _userAuthenticationTable;
 
         public IDbRepositoryBase<UserEntity> UserTable => _userTable ?? new DbRepositoryBase<UserEntity>(DbContext);
         public IDbRepositoryBase<UserAuthenticationEntity> UserAuthenticationTable => _userAuthenticationTable ?? new DbRepositoryBase<UserAuthenticationEntity>(DbContext);
 
-        public UserRepository(AppDbContext dbContext, HttpContext httpContext): base(dbContext, httpContext)
+        public UserRepository(AppDbContext dbContext, IHttpContextAccessor httpContextAccessor): base(dbContext, httpContextAccessor)
         {
             InitializeRepositories(dbContext);
         }
@@ -26,5 +25,7 @@ namespace Logic.Shared.Repositories
             _userTable = new DbRepositoryBase<UserEntity>(dbContext);
             _userAuthenticationTable = new DbRepositoryBase<UserAuthenticationEntity>(dbContext);
         }
+
+        public async Task SaveChanges(string name = "System") => await SaveChangesAsync(name);
     }
 }

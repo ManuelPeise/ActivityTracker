@@ -7,5 +7,6 @@ namespace Logic.Shared.Interfaces
     {
         public IDbRepositoryBase<UserEntity> UserTable {  get; }
         public IDbRepositoryBase<UserAuthenticationEntity> UserAuthenticationTable {  get; }
+        Task SaveChanges(string userName = "System");
     }
 }

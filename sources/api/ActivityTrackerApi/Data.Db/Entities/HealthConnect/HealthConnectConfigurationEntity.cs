@@ -9,6 +9,7 @@ namespace Data.Db.Entities.HealthConnect
     {
         public string DeviceId { get; set; } = string.Empty;
         public string DeviceName { get; set; } = string.Empty;
+        public string SyncClientId { get; set; } = string.Empty;
         public ConnectionStatus Status { get; set; }
         public bool IsActive { get; set; }
         public int UserId { get; set; }

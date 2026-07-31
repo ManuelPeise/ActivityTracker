@@ -28,14 +28,6 @@ namespace Core.Api.Services.ApiControllers.Import
             return await _healthConnectModule.UpdateConfiguration(configurationUpdate);
         }
 
-        [HttpPost(Name = "UpdateHealthConnectProviderAndMetrics")]
-        public async Task<IActionResult> UpdateHealthConnectProviderAndMetrics([FromBody] HealthConnectProviderMetricsModel providerMetricsModel)
-        {
-            await _healthConnectModule.UpdateProviderAndMetrics(providerMetricsModel);
-
-            return Ok();
-        }
-
         [HttpPost(Name = "ImportHealthConnectData")]
         public async Task<IActionResult> ImportHealthConnectData([FromBody] HealthConnectImportModel importModel)
         {

@@ -5,6 +5,7 @@ namespace Data.Db.Entities.HealthConnect
     [Table("HealthConnectSourceMapping")]
     public class HealthConnectSourceMappingEntity: AEntityBase
     {
+        public int UserId { get; set; }
         public string Source { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
         public bool IsActive { get; set; }

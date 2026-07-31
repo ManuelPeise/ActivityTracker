@@ -1,8 +1,5 @@
-﻿using Data.Db;
+using Data.Db;
 using Data.Db.Entities;
-using Data.Db.Entities.Authentication;
-using Data.Db.Repositories;
-using Data.Db.Repositories.Interfaces;
 using Logic.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
@@ -13,26 +10,25 @@ namespace Logic.Shared
     public class ApplicationUnitOfWork : IApplicationUnitOfWork
     {
         private readonly AppDbContext _dbContext;
-        private readonly HttpContext _httpContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         private IUserRepository? _userRepository;
         private IHealthConnectRepository? _healthConnectRepository;
 
-        public IUserRepository UserRepository => _userRepository ?? new UserRepository(_dbContext, _httpContext);
-        public IHealthConnectRepository HealthConnectRepository => _healthConnectRepository ?? new HealthConnectRepository(_dbContext, _httpContext);
+        public IUserRepository UserRepository => _userRepository ??= new UserRepository(_dbContext, _httpContextAccessor);
+        public IHealthConnectRepository HealthConnectRepository => _healthConnectRepository ??= new HealthConnectRepository(_dbContext, _httpContextAccessor);
 
         public ApplicationUnitOfWork(AppDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = dbContext;
-            _httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor.HttpContext));
-            InitializeRepositories(dbContext);
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         public async Task SaveChangesAsync(string userName = "System")
         {
             if (_dbContext == null) throw new ObjectDisposedException(nameof(ApplicationUnitOfWork));
 
-            var user = _httpContext.User.Identity?.Name ?? userName;
+            var user = _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? userName;
 
             var now = DateTime.UtcNow;
 
@@ -59,14 +55,5 @@ namespace Logic.Shared
 
             await _dbContext.SaveChangesAsync();
         }
-
-
-        private void InitializeRepositories(AppDbContext dbContext)
-        {
-            _userRepository = new UserRepository(dbContext, _httpContext);
-            _healthConnectRepository = new HealthConnectRepository(dbContext, _httpContext);
-        }
-
-
     }
 }
