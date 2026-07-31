@@ -40,7 +40,7 @@ const DropdownListItem: React.FC<DropdownListItemProps> = (props) => {
     onChange,
   } = props;
 
-  const normalizedValue = value.toString();
+  const normalizedValue = value?.toString() ?? "";
 
   const handleChange = React.useCallback(
     (event: SelectChangeEvent<string>) => {
@@ -76,18 +76,21 @@ const DropdownListItem: React.FC<DropdownListItemProps> = (props) => {
           return selectedOption?.label ?? placeholderLabel;
         }}
       >
-        <MenuItem value="" disabled>
-          {placeholderLabel}
-        </MenuItem>
-        {options.map((option) => (
-          <MenuItem
-            key={option.id.toString()}
-            value={option.id.toString()}
-            disabled={option.disabled}
-          >
-            {option.label}
+        {placeholderLabel && (
+          <MenuItem value="" disabled>
+            {placeholderLabel ?? ""}
           </MenuItem>
-        ))}
+        )}
+        {options &&
+          options.map((option) => (
+            <MenuItem
+              key={option.id.toString()}
+              value={option.id.toString()}
+              disabled={option.disabled}
+            >
+              {option.label}
+            </MenuItem>
+          ))}
       </Select>
     </ListItem>
   );

@@ -5,8 +5,8 @@ import { HealthConnectProvider } from "./HealthConnectProvider";
 export type HealthConnectConfiguration = {
   isActive: boolean;
   status: ConnectionStatus;
-  selectedProviderId: number;
-  availableProviders: HealthConnectProvider[];
+  selectedSourceId: number;
+  availableSources: HealthConnectProvider[];
   selectedMetricIds: number[];
   metrics: HealthConnectMetric[];
   isInitialLoad: boolean;

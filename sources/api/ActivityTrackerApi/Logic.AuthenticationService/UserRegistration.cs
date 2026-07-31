@@ -43,10 +43,9 @@ namespace Logic.AuthenticationService
                         Salt = Guid.NewGuid().ToString(),
                         PasswordExpiresAt = DateTime.UtcNow.AddMonths(3)
                     },
-                    UserDataSync = new DataSyncConnectionEntity()
                 };
 
-                var isInserted = await _applicationUnitOfWork.UserTable.Insert(entity, e => e.EmailAddress == request.EmailAddress);
+                var isInserted = await _applicationUnitOfWork.UserRepository.UserTable.Insert(entity, e => e.EmailAddress == request.EmailAddress);
 
                 if (isInserted)
                 {

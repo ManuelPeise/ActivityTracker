@@ -29,7 +29,7 @@ namespace Logic.AuthenticationService
                     return null;
                 }
 
-                var users = await _applicationUnitOfWork.UserTable.GetBy(
+                var users = await _applicationUnitOfWork.UserRepository.UserTable.GetBy(
                     user => user.EmailAddress == request.EmailAddress, 
                     true,
                     user => user.Include(u => u.UserAuthentication));
@@ -57,7 +57,7 @@ namespace Logic.AuthenticationService
                     user.UserAuthentication.RefreshToken = refreshToken;
                     user.UserAuthentication.RefreshTokenExpiresAt = DateTime.UtcNow.AddSeconds(_jwtTokenService.GetJwtExpireSeconds());
 
-                    isUpdated = await _applicationUnitOfWork.UserTable.Update(user, u => u.Id == user.Id);
+                    isUpdated = await _applicationUnitOfWork.UserRepository.UserTable.Update(user, u => u.Id == user.Id);
                 }
 
                 if (isUpdated)

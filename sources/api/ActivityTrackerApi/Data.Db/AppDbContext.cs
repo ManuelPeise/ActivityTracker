@@ -1,5 +1,5 @@
 ﻿using Data.Db.Entities.Authentication;
-using Data.Db.Entities.Import;
+using Data.Db.Entities.HealthConnect;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Db
@@ -8,10 +8,16 @@ namespace Data.Db
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        // User
         public DbSet<UserEntity> UserTable { get; set; }
         public DbSet<UserAuthenticationEntity> UserAuthenticationTable { get; set; }
-        public DbSet<DataSyncConnectionEntity> DataSyncConnectionTable { get; set; }
-        public DbSet<ImportConfigurationEntity> ImportConfigurationTable { get; set; }
+
+        // HealthConnect
+        public DbSet<HealthConnectConfigurationEntity> HealthConnectConfigurationTable { get; set; }
+        public DbSet<HealthConnectMetricEntity> HealthConnectMetricTable { get; set; }
+        public DbSet<HealthConnectMetricMappingEntity> HealthConnectMetricMappingTable { get; set; }
+        public DbSet<HealthConnectSourceEntity> HealthConnectSourceTable { get; set; }
+        public DbSet<HealthConnectSourceMappingEntity> HealthConnectSourceMappingTable { get; set; }
 
         override protected void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,26 +44,11 @@ namespace Data.Db
                 entity.Property(e => e.CreatedAt).IsRequired();
             });
 
-            modelBuilder.Entity<DataSyncConnectionEntity>(entity =>
-            {
-                entity.ToTable("DataSyncConnectionTable");
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
-                entity.Property(e => e.DevideId).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.CreatedAt).IsRequired();
-            });
-
             modelBuilder.Entity<UserEntity>(entity =>
             {
                 entity.HasOne(u => u.UserAuthentication)
                       .WithOne()
                       .HasForeignKey<UserEntity>(u => u.UserAuthenticationId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(u => u.UserDataSync)
-                      .WithOne()
-                      .HasForeignKey<UserEntity>(u => u.UserDataSyncId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }

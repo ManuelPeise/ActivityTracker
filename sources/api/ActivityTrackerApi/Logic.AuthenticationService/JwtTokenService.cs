@@ -33,7 +33,7 @@ namespace Logic.AuthenticationService
 
             var email = principal.Identity!.Name ?? string.Empty;
 
-            var users = await _applicationUnitOfWork.UserTable.GetBy(
+            var users = await _applicationUnitOfWork.UserRepository.UserTable.GetBy(
                 user => user.EmailAddress == email, 
                 true,
                 user => user.Include(u => u.UserAuthentication));
@@ -55,7 +55,7 @@ namespace Logic.AuthenticationService
 
             user.UserAuthentication.RefreshToken = newRefreshToken;
 
-            await _applicationUnitOfWork.UserTable.Update(user, u => u.Id == user.Id);
+            await _applicationUnitOfWork.UserRepository.UserTable.Update(user, u => u.Id == user.Id);
 
             await _applicationUnitOfWork.SaveChangesAsync();
 

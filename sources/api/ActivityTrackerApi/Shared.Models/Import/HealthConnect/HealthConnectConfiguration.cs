@@ -4,10 +4,10 @@ namespace Shared.Models.Import.HealthConnect
 {
     public class HealthConnectConfiguration
     {
-        public Guid ConnectionGuid { get; set; }
+        public string DeviceId { get; set; } = string.Empty;
+        public string DeviceName { get; set; } = string.Empty;
         public ConnectionStatus Status { get; set; }
         public bool IsActive { get; set; }
-        public bool IsInitialLoad { get; set; }
         public int SelectedSourceId { get; set; } = -1;
         public List<HealthConnectSource> AvailableSources { get; set; } = new List<HealthConnectSource>();
         public List<int> SelectedMetricIds { get; set; } = new List<int>();

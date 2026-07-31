@@ -10,7 +10,7 @@ const HealthConnectContainer: React.FC = () => {
   >(
     {
       method: "GET",
-      serviceUrl: "/api/HealthConnect/GetHealthConnectConfiguration",
+      serviceUrl: "HealthConnect/GetHealthConnectConfiguration",
     },
     true,
   );
@@ -19,7 +19,7 @@ const HealthConnectContainer: React.FC = () => {
     async (updatedConfiguration: HealthConnectConfiguration) => {
       await connectionApi.sendRequest({
         method: "POST",
-        serviceUrl: "/api/HealthConnect/UpdateHealthConnectConfiguration",
+        serviceUrl: "HealthConnect/UpdateHealthConnectConfiguration",
         model: updatedConfiguration,
       });
     },

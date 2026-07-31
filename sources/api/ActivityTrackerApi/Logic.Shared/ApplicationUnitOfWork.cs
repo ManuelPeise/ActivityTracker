@@ -6,7 +6,7 @@ using Data.Db.Repositories.Interfaces;
 using Logic.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
-using Data.Db.Entities.Import;
+using Logic.Shared.Repositories;
 
 namespace Logic.Shared
 {
@@ -14,15 +14,12 @@ namespace Logic.Shared
     {
         private readonly AppDbContext _dbContext;
         private readonly HttpContext _httpContext;
-        private IDbRepositoryBase<UserEntity>? _userTable;
-        private IDbRepositoryBase<UserAuthenticationEntity>? _userAuthenticationTable;
-        private IDbRepositoryBase<DataSyncConnectionEntity>? _dataSyncConnectionTable;
-        private IDbRepositoryBase<ImportConfigurationEntity>? _importConfigurationTable;
 
-        public IDbRepositoryBase<UserEntity> UserTable => _userTable ?? new DbRepositoryBase<UserEntity>(_dbContext);
-        public IDbRepositoryBase<UserAuthenticationEntity> UserAuthenticationTable => _userAuthenticationTable ?? new DbRepositoryBase<UserAuthenticationEntity>(_dbContext);
-        public IDbRepositoryBase<DataSyncConnectionEntity> DataSyncConnectionTable => _dataSyncConnectionTable ?? new DbRepositoryBase<DataSyncConnectionEntity>(_dbContext);
-        public IDbRepositoryBase<ImportConfigurationEntity> ImportConfigurationTable => _importConfigurationTable ?? new DbRepositoryBase<ImportConfigurationEntity>(_dbContext);
+        private IUserRepository? _userRepository;
+        private IHealthConnectRepository? _healthConnectRepository;
+
+        public IUserRepository UserRepository => _userRepository ?? new UserRepository(_dbContext, _httpContext);
+        public IHealthConnectRepository HealthConnectRepository => _healthConnectRepository ?? new HealthConnectRepository(_dbContext, _httpContext);
 
         public ApplicationUnitOfWork(AppDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
@@ -30,7 +27,6 @@ namespace Logic.Shared
             _httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor.HttpContext));
             InitializeRepositories(dbContext);
         }
-
 
         public async Task SaveChangesAsync(string userName = "System")
         {
@@ -67,10 +63,8 @@ namespace Logic.Shared
 
         private void InitializeRepositories(AppDbContext dbContext)
         {
-            _userTable = new DbRepositoryBase<UserEntity>(dbContext);
-            _userAuthenticationTable = new DbRepositoryBase<UserAuthenticationEntity>(dbContext);
-            _dataSyncConnectionTable = new DbRepositoryBase<DataSyncConnectionEntity>(dbContext);
-            _importConfigurationTable = new DbRepositoryBase<ImportConfigurationEntity>(dbContext);
+            _userRepository = new UserRepository(dbContext, _httpContext);
+            _healthConnectRepository = new HealthConnectRepository(dbContext, _httpContext);
         }
 
 

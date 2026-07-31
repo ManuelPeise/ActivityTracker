@@ -24,7 +24,7 @@ namespace Logic.Shared
             {
                 var currentUserId = GetCurrentUserId();
 
-                var userEntity = await _applicationUnitOfWork.UserTable.GetById(currentUserId);
+                var userEntity = await _applicationUnitOfWork.UserRepository.UserTable.GetById(currentUserId);
 
                 if(userEntity == null)
                 {

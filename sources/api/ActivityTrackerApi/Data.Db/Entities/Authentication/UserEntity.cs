@@ -12,8 +12,5 @@ namespace Data.Db.Entities.Authentication
         public int UserAuthenticationId { get; set; }
         [ForeignKey(nameof(UserAuthenticationId))]
         public UserAuthenticationEntity UserAuthentication { get; set; } = null!;
-        public int UserDataSyncId { get; set; }
-        [ForeignKey(nameof(UserDataSyncId))]
-        public DataSyncConnectionEntity UserDataSync { get; set; } = null!;
     }
 }

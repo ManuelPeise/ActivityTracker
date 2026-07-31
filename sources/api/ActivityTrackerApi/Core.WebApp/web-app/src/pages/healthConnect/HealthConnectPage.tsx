@@ -54,8 +54,8 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
   const {
     isActive,
     status,
-    selectedProviderId,
-    availableProviders,
+    selectedSourceId,
+    availableSources,
     selectedMetricIds,
     metrics,
     isInitialLoad,
@@ -64,8 +64,8 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
   } = subscribeValues((configuration) => ({
     isActive: configuration.isActive,
     status: configuration.status,
-    selectedProviderId: configuration.selectedProviderId,
-    availableProviders: configuration.availableProviders,
+    selectedSourceId: configuration.selectedSourceId,
+    availableSources: configuration.availableSources,
     selectedMetricIds: configuration.selectedMetricIds,
     metrics: configuration.metrics,
     isInitialLoad: configuration.isInitialLoad,
@@ -184,16 +184,16 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
           maximumWidth={300}
           minimumWidth={300}
           label="Select your provider"
-          propertyName="selectedProviderId"
+          propertyName="selectedSourceId"
           placeholderLabel="Select a provider"
-          options={availableProviders?.map((provider) => ({
-            id: provider.id,
-            label: provider.name,
+          options={availableSources?.map((source) => ({
+            id: source.id,
+            label: source.name,
           }))}
-          value={selectedProviderId}
-          disabled={!isActive || availableProviders.length === 0}
+          value={selectedSourceId}
+          disabled={!isActive || availableSources.length === 0}
           divider={true}
-          onChange={(_, value) => onChange("selectedProviderId", value)}
+          onChange={(_, value) => onChange("selectedSourceId", value)}
         />
         <MultiSelectDropdownListItem
           maximumWidth={300}

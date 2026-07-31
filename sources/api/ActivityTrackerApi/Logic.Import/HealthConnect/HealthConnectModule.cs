@@ -4,7 +4,7 @@ using Shared.Enums;
 using Shared.Interfaces;
 using Shared.Models.Import.HealthConnect;
 using Newtonsoft.Json;
-using Data.Db.Entities.Import;
+using Data.Db.Entities.HealthConnect;
 
 namespace Logic.Import.HealthConnect
 {
@@ -25,13 +25,14 @@ namespace Logic.Import.HealthConnect
         {
             try
             {
-                var configuration = await LoadConfigurationEntity();
+                var configurationEntity = await LoadConfigurationEntity();
 
-                var configurationModel = !string.IsNullOrEmpty(configuration?.ConfigurationJson) ?
-                    JsonConvert.DeserializeObject<HealthConnectConfiguration>(configuration.ConfigurationJson) :
-                    null;
+                if(configurationEntity == null)
+                {
+                    configurationEntity = GetDefaultHealthConnectConfigurationEntity();
+                }
 
-                return configurationModel ?? GetDefaultHealthConnectConfiguration();
+                return ToConfigurationModel(configurationEntity);
 
             }
             catch (Exception exception)
@@ -50,34 +51,23 @@ namespace Logic.Import.HealthConnect
 
                 var configurationEntity = await LoadConfigurationEntity();
 
-                var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
-                    GetDefaultHealthConnectConfiguration() :
-                    JsonConvert.DeserializeObject<HealthConnectConfiguration>(configurationEntity.ConfigurationJson);
-
-                if (config == null)
+                if (configurationEntity == null)
                 {
-                    config = GetDefaultHealthConnectConfiguration();
+                    configurationEntity = GetDefaultHealthConnectConfigurationEntity();
                 }
 
-                config.IsActive = configurationUpdate.IsActive;
-                config.IsInitialLoad = !configurationUpdate.IsActive ? false : configurationUpdate.IsInitialLoad;
-                config.SelectedProviderId = configurationUpdate.SelectedProviderId;
-                config.Metrics = configurationUpdate.Metrics;
-                config.SelectedMetricIds = configurationUpdate.SelectedMetricIds;
-                config.Status = !config.IsActive ? ConnectionStatus.Disconnected :
-                    !config.AvailableProviders.Any() || !config.AvailableProviders.Any(p => p.Id == config.SelectedProviderId) ?
-                        ConnectionStatus.Pending :
-                    config.Status;
-                config.UpdatedAt = updateTimeStamp.ToString("o");
-                config.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
-
-                configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
+                configurationEntity.IsActive = configurationUpdate.IsActive;
+                configurationEntity.DeviceId = configurationUpdate.DeviceId;
+                configurationEntity.DeviceName = configurationUpdate.DeviceName;
+                configurationEntity.Status = configurationUpdate.Status;
                 configurationEntity.UpdatedAt = updateTimeStamp;
                 configurationEntity.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
-
+                configurationEntity.HealthConnectMetricMappings = new List<HealthConnectMetricMappingEntity>();
+                configurationEntity.HealthConnectSourceMappings = new List<HealthConnectSourceMappingEntity>();
+               
                 await SaveConfigurationEntity(configurationEntity);
 
-                return config;
+                return ToConfigurationModel(configurationEntity);
             }
             catch (Exception exception)
             {
@@ -87,117 +77,30 @@ namespace Logic.Import.HealthConnect
             }
         }
 
-        public async Task UpdateProviderAndMetrics(HealthConnectProviderMetricsModel healthConnectProviderMetricsModel)
+        public Task UpdateProviderAndMetrics(HealthConnectProviderMetricsModel healthConnectProviderMetricsModel)
         {
-            try
-            {
-                var updateTimeStamp = DateTime.Now;
-
-                if (healthConnectProviderMetricsModel == null)
-                {
-                    throw new ArgumentNullException(nameof(healthConnectProviderMetricsModel));
-                }
-
-                var configurationEntity = await LoadConfigurationEntity();
-
-                var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
-                    GetDefaultHealthConnectConfiguration() :
-                    JsonConvert.DeserializeObject<HealthConnectConfiguration>(configurationEntity.ConfigurationJson);
-
-                if (config == null || !config.IsActive)
-                {
-                    throw new InvalidOperationException($"HealthConnect configuration is invalid or inactive for user {_userSecurity.CurrentUser.Id}.");
-                }
-
-                config.AvailableProviders = healthConnectProviderMetricsModel.Providers ?? [];
-                config.Metrics = healthConnectProviderMetricsModel.Metrics ?? [];
-                config.UpdatedAt = updateTimeStamp.ToString("o");
-                config.UpdatedBy = "System";
-
-                //[TODO] handle status
-                configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
-                configurationEntity.UpdatedAt = DateTime.UtcNow;
-                configurationEntity.UpdatedBy = _userSecurity.CurrentUser.EmailAddress;
-
-                await SaveConfigurationEntity(configurationEntity);
-
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Error occurred while updating HealthConnect providers and metrics for user {UserId}.", _userSecurity.CurrentUser.Id);
-
-                throw new ApplicationException($"An error occurred while updating HealthConnect providers and metrics for user {_userSecurity.CurrentUser.Id}.", exception);
-            }
+            throw new NotImplementedException();
         }
 
         public async Task ImportHealthData(HealthConnectImportModel importModel)
         {
-            try
-            {
-                if (importModel == null)
-                {
-                    throw new ArgumentNullException(nameof(importModel));
-                }
-
-                var configurationEntity = await LoadConfigurationEntity();
-
-                var config = string.IsNullOrEmpty(configurationEntity.ConfigurationJson) ?
-                    GetDefaultHealthConnectConfiguration() :
-                    JsonConvert.DeserializeObject<HealthConnectConfiguration>(configurationEntity.ConfigurationJson);
-
-                if (config == null)
-                {
-                    throw new InvalidOperationException($"HealthConnect configuration is invalid for user {_userSecurity.CurrentUser.Id}.");
-                }
-
-                if (!config.IsActive)
-                {
-                    _logger.LogWarning("HealthConnect import attempted while connection is inactive for user {UserId}.", _userSecurity.CurrentUser.Id);
-
-                    return;
-                }
-
-                EnsureConfigIsUpToDate(config, importModel, out bool isModified);
-
-                if (isModified)
-                {
-                    configurationEntity.ConfigurationJson = JsonConvert.SerializeObject(config);
-
-                    await SaveConfigurationEntity(configurationEntity);
-                }
-
-                var provider = config.AvailableProviders.FirstOrDefault(p => p.Id == config.SelectedProviderId);
-
-                if (provider == null)
-                {
-                    _logger.LogWarning("Selected provider with ID {ProviderId} not found in available providers for user {UserId}.", config.SelectedProviderId, _userSecurity.CurrentUser.Id);
-
-                    return;
-                }
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Error occurred while importing HealthConnect data for user {UserId}.", _userSecurity.CurrentUser.Id);
-
-                throw new ApplicationException($"An error occurred while importing HealthConnect data for user {_userSecurity.CurrentUser.Id}.", exception);
-            }
+           
         }
 
-    
-
-        private async Task<ImportConfigurationEntity> LoadConfigurationEntity()
+        private async Task<HealthConnectConfigurationEntity> LoadConfigurationEntity()
         {
-            var configurations = await _applicationUnitOfWork.ImportConfigurationTable.GetBy(x =>
-                x.Type == ConfigurationType.HealthConnect &&
-                x.UserId == _userSecurity.CurrentUser.Id);
+            var configurations = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.GetBy(x =>
+               x.UserId == _userSecurity.CurrentUser.Id);
 
             if (configurations == null || !configurations.Any())
             {
-                return new ImportConfigurationEntity
+                return new HealthConnectConfigurationEntity
                 {
+                    DeviceId = string.Empty,
+                    DeviceName = string.Empty,
                     UserId = _userSecurity.CurrentUser.Id,
-                    Type = ConfigurationType.HealthConnect,
-                    ConfigurationJson = JsonConvert.SerializeObject(GetDefaultHealthConnectConfiguration())
+                    IsActive = false,
+                    Status = ConnectionStatus.Disconnected,     
                 };
             }
 
@@ -209,22 +112,23 @@ namespace Logic.Import.HealthConnect
             return configurations.First();
         }
 
-        private HealthConnectConfiguration GetDefaultHealthConnectConfiguration()
+        private HealthConnectConfigurationEntity GetDefaultHealthConnectConfigurationEntity()
         {
-            var configuration = new HealthConnectConfiguration
+            var configurationEntity = new HealthConnectConfigurationEntity
             {
-                ConnectionGuid = Guid.NewGuid(),
+                DeviceId = string.Empty,
+                UserId = _userSecurity.CurrentUser.Id,
+                DeviceName = string.Empty,
                 Status = ConnectionStatus.Disconnected,
-                IsActive = false,
-                SelectedProviderId = -1
+                IsActive = false, 
             };
 
-            return configuration;
+            return configurationEntity;
         }
 
         private void EnsureConfigIsUpToDate(HealthConnectConfiguration config, HealthConnectImportModel importModel, out bool isModified)
         {
-            config.AvailableProviders ??= [];
+            config.AvailableSources ??= [];
             config.Metrics ??= [];
 
             var providers = importModel.Providers ?? [];
@@ -232,20 +136,20 @@ namespace Logic.Import.HealthConnect
 
             isModified = false;
 
-            var existingProviderNames = new HashSet<string>(config.AvailableProviders
-                .Where(provider => !string.IsNullOrWhiteSpace(provider.Name))
-                .Select(provider => provider.Name), StringComparer.OrdinalIgnoreCase);
+            var existingSourceNames = new HashSet<string>(config.AvailableSources
+                .Where(source => !string.IsNullOrWhiteSpace(source.Name))
+                .Select(source => source.Name), StringComparer.OrdinalIgnoreCase);
 
-            foreach (var provider in providers)
+            foreach (var source in providers)
             {
-                if (string.IsNullOrWhiteSpace(provider.Name))
+                if (string.IsNullOrWhiteSpace(source.Name))
                 {
                     continue;
                 }
 
-                if (existingProviderNames.Add(provider.Name))
+                if (existingSourceNames.Add(source.Name))
                 {
-                    config.AvailableProviders.Add(provider);
+                    config.AvailableSources.Add(source);
                     isModified = true;
                 }
             }
@@ -268,19 +172,20 @@ namespace Logic.Import.HealthConnect
                 }
             }
         }
-        private async Task SaveConfigurationEntity(ImportConfigurationEntity configurationEntity)
+        
+        private async Task SaveConfigurationEntity(HealthConnectConfigurationEntity configurationEntity)
         {
             var dbIsModified = false;
 
             if (configurationEntity.Id == 0)
             {
-                dbIsModified = await _applicationUnitOfWork.ImportConfigurationTable.Insert(
+                dbIsModified = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.Insert(
                     configurationEntity,
-                    x => x.UserId == _userSecurity.CurrentUser.Id && x.Type == ConfigurationType.HealthConnect);
+                    x => x.UserId == _userSecurity.CurrentUser.Id);
             }
             else
             {
-                dbIsModified = await _applicationUnitOfWork.ImportConfigurationTable.Update(
+                dbIsModified = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.Update(
                     configurationEntity,
                     x => x.Id == configurationEntity.Id);
             }
@@ -290,5 +195,24 @@ namespace Logic.Import.HealthConnect
                 await _applicationUnitOfWork.SaveChangesAsync();
             }
         }
+
+        private HealthConnectConfiguration ToConfigurationModel(HealthConnectConfigurationEntity configurationEntity)
+        {
+            return new HealthConnectConfiguration
+            {
+                DeviceId = configurationEntity.DeviceId,
+                DeviceName = configurationEntity.DeviceName,
+                Status = configurationEntity.Status,
+                IsActive = configurationEntity.IsActive,
+                SelectedSourceId = -1,
+                AvailableSources = new List<HealthConnectSource>(),
+                Metrics = new List<HealthConnectMetric>(),
+                SelectedMetricIds = new List<int>(),
+                UpdatedAt = configurationEntity?.UpdatedAt?.ToString("o") ?? string.Empty,
+                UpdatedBy = configurationEntity?.UpdatedBy ?? string.Empty,
+            };
+        }
+
+        
     }
 }

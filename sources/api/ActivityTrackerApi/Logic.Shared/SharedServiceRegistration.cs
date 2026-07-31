@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Logic.Shared.Interfaces;
+using Logic.Shared.Repositories;
 
 namespace Logic.Shared
 {
@@ -9,6 +10,8 @@ namespace Logic.Shared
         {
             // Register shared services here
             services.AddScoped<IApplicationUnitOfWork, ApplicationUnitOfWork>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IHealthConnectRepository, HealthConnectRepository>();
             services.AddScoped<IUserSecurity, UserSecurity>();
         }
     }
