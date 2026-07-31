@@ -11,9 +11,7 @@ import { HealthConnectConfiguration } from "./types/HealthConnectConfiguration";
 import { useForm } from "../../hooks/useForm";
 import StatusListItem from "../../components/list/StatusListitem";
 import { ConnectionStatus } from "../../lib/enums/ConnectionStatus";
-import DropdownListItem from "../../components/list/DropdownListItem";
-import { HealthConnectMetric } from "./types/HealthConnectMetric";
-import MultiSelectDropdownListItem from "../../components/list/MultiSelectDropdownListItem";
+import { HealthConnectMetricMapping } from "./types/HealthConnectMetricMapping";
 import FormChipListItem from "../../components/list/FormChipListItem";
 import LastUpdateAtByListItem from "../../components/list/LastUpdateAtByListItem";
 
@@ -28,50 +26,22 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
   const { configuration, handleUpdateConfiguration } = props;
   const { theme } = useStyles();
 
-  const initialMetrics = React.useMemo((): HealthConnectMetric[] => {
-    return configuration.metrics ?? [];
-  }, [configuration.metrics]);
-
-  const initialSelectedMetricIds = React.useMemo((): number[] => {
-    const availableMetricIds = new Set(
-      initialMetrics.map((metric) => metric.id),
-    );
-
-    if (configuration.selectedMetricIds?.length > 0) {
-      return configuration.selectedMetricIds.filter((metricId) =>
-        availableMetricIds.has(metricId),
-      );
-    }
-
-    return initialMetrics
-      .filter((metric) => metric.isActive)
-      .map((metric) => metric.id);
-  }, [configuration.selectedMetricIds, initialMetrics]);
+  const initialMetrics = React.useMemo((): HealthConnectMetricMapping[] => {
+    return configuration.metricMappings ?? [];
+  }, [configuration.metricMappings]);
 
   const { isModified, subscribeValues, onChange, resetForm, updatedModel } =
     useForm<HealthConnectConfiguration>(configuration);
 
-  const {
-    isActive,
-    status,
-    selectedSourceId,
-    availableSources,
-    selectedMetricIds,
-    metrics,
-    isInitialLoad,
-    lastUpdatedAt,
-    lastUpdatedBy,
-  } = subscribeValues((configuration) => ({
-    isActive: configuration.isActive,
-    status: configuration.status,
-    selectedSourceId: configuration.selectedSourceId,
-    availableSources: configuration.availableSources,
-    selectedMetricIds: configuration.selectedMetricIds,
-    metrics: configuration.metrics,
-    isInitialLoad: configuration.isInitialLoad,
-    lastUpdatedAt: configuration.updatedAt,
-    lastUpdatedBy: configuration.updatedBy,
-  }));
+  const { isActive, status, lastUpdatedAt, lastUpdatedBy } = subscribeValues(
+    (configuration) => ({
+      isActive: configuration.isActive,
+      status: configuration.status,
+
+      lastUpdatedAt: configuration.updatedAt,
+      lastUpdatedBy: configuration.updatedBy,
+    }),
+  );
 
   const formButtonProps = React.useMemo((): FormButtonProps[] => {
     return [
@@ -100,26 +70,6 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
         return "Unknown";
     }
   }, [status]);
-
-  const handleToggleMetric = React.useCallback(
-    (metricId: number, isSelected: boolean) => {
-      const nextSelectedMetricIds = isSelected
-        ? [...selectedMetricIds, metricId]
-        : selectedMetricIds.filter((selectedId) => selectedId !== metricId);
-
-      const nextMetrics = metrics.map((metric) => {
-        if (metric.id === metricId) {
-          return { ...metric, isActive: isSelected };
-        }
-
-        return metric;
-      });
-
-      onChange("selectedMetricIds", nextSelectedMetricIds);
-      onChange("metrics", nextMetrics);
-    },
-    [metrics, onChange, selectedMetricIds],
-  );
 
   return (
     <PageContainer
@@ -180,48 +130,7 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
           divider={true}
           onChange={(_, value) => onChange("isActive", value)}
         />
-        <DropdownListItem
-          maximumWidth={300}
-          minimumWidth={300}
-          label="Select your provider"
-          propertyName="selectedSourceId"
-          placeholderLabel="Select a provider"
-          options={availableSources?.map((source) => ({
-            id: source.id,
-            label: source.name,
-          }))}
-          value={selectedSourceId}
-          disabled={!isActive || availableSources.length === 0}
-          divider={true}
-          onChange={(_, value) => onChange("selectedSourceId", value)}
-        />
-        <MultiSelectDropdownListItem
-          maximumWidth={300}
-          minimumWidth={300}
-          label="Select metrics to track"
-          items={metrics}
-          selectedItemIds={selectedMetricIds}
-          disabled={!isActive || metrics.length === 0}
-          onSelectedItem={handleToggleMetric}
-          divider={true}
-          placeholderLabel="No active metrics available"
-        />
-        {selectedMetricIds.length > 0 && (
-          <FormChipListItem
-            items={metrics}
-            selectedItemIds={selectedMetricIds}
-            onDeleteItem={(itemId) => handleToggleMetric(itemId, false)}
-            divider={true}
-          />
-        )}
-        <FormListItemSwitch
-          label="Request a initial load (30 days) of all selected metrics on the next sync."
-          propertyName="isInitialLoad"
-          value={isInitialLoad}
-          disabled={!isActive}
-          divider={true}
-          onChange={(_, value) => onChange("isInitialLoad", value)}
-        />
+
         <LastUpdateAtByListItem
           lastUpdateAt={lastUpdatedAt}
           lastUpdateBy={lastUpdatedBy}

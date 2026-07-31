@@ -26,10 +26,10 @@ namespace Logic.Import.HealthConnect
             {
                 var metrics = await EnsureHealthConnectMetricAdded();
                 var sources = await GetHealthConnectSourcesMappings();
-                
-                var configurationEntity = await LoadConfigurationEntity();
 
-                if(configurationEntity == null)
+                var configurationEntity = await LoadConfigurationEntity(_userSecurity.CurrentUser.Id);
+
+                if (configurationEntity == null)
                 {
                     configurationEntity = GetDefaultHealthConnectConfigurationEntity();
                 }
@@ -49,8 +49,8 @@ namespace Logic.Import.HealthConnect
         {
             try
             {
-                var configurationEntity = await LoadConfigurationEntity();
-                
+                var configurationEntity = await LoadConfigurationEntity(_userSecurity.CurrentUser.Id);
+
                 if (configurationEntity == null)
                 {
                     configurationEntity = GetDefaultHealthConnectConfigurationEntity();
@@ -77,7 +77,7 @@ namespace Logic.Import.HealthConnect
             {
                 var updateTimeStamp = DateTime.Now;
 
-                var configurationEntity = await LoadConfigurationEntity();
+                var configurationEntity = await LoadConfigurationEntity(_userSecurity.CurrentUser.Id);
 
                 if (configurationEntity == null)
                 {
@@ -95,7 +95,7 @@ namespace Logic.Import.HealthConnect
 
                 configurationEntity.IsActive = configurationUpdate.IsActive;
 
-                if(configurationUpdate.IsActive && string.IsNullOrEmpty(configurationEntity.SyncClientId))
+                if (configurationUpdate.IsActive && string.IsNullOrEmpty(configurationEntity.SyncClientId))
                 {
                     configurationEntity.SyncClientId = Guid.NewGuid().ToString();
                 }
@@ -103,7 +103,7 @@ namespace Logic.Import.HealthConnect
                 configurationEntity.DeviceId = configurationUpdate.DeviceId;
                 configurationEntity.DeviceName = configurationUpdate.DeviceName;
                 configurationEntity.Status = configurationUpdate.Status;
-                
+
                 await UpdateMetricMappingEntities(configurationEntity.HealthConnectMetricMappings, updatedMetricMappings);
                 await UpdateSourceMappingEntities(configurationEntity.HealthConnectSourceMappings, updatedSourceMappings);
 
@@ -127,7 +127,7 @@ namespace Logic.Import.HealthConnect
         {
             try
             {
-                var configurationEntity = await LoadConfigurationEntity();
+                var configurationEntity = await LoadConfigurationEntity(_userSecurity.CurrentUser.Id);
 
                 if (configurationEntity == null)
                 {
@@ -155,7 +155,7 @@ namespace Logic.Import.HealthConnect
 
         public async Task ImportHealthData(HealthConnectImportModel importModel)
         {
-           
+
         }
 
         private async Task<HashSet<HealthConnectMetricMapping>> EnsureHealthConnectMetricAdded()
@@ -172,12 +172,19 @@ namespace Logic.Import.HealthConnect
             return await sourceMapper.GetMappingsAsync();
         }
 
-        private async Task<HealthConnectConfigurationEntity> LoadConfigurationEntity()
+        private async Task<HealthConnectConfigurationEntity> LoadConfigurationEntity(int userId)
         {
-            var configurations = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.GetBy(x =>
-               x.UserId == _userSecurity.CurrentUser.Id);
+            HealthConnectConfigurationEntity? configuration;
+            var configurations = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.GetBy(x => x.UserId == userId);
 
-            if (configurations == null || !configurations.Any())
+            if (configurations != null && configurations.Count() > 1)
+            {
+                throw new Exception($"Multiple HealthConnect configurations found for user {userId}. Expected only one configuration.");
+            }
+
+            configuration = configurations?.FirstOrDefault() ?? null;
+
+            if (configuration == null)
             {
                 return new HealthConnectConfigurationEntity
                 {
@@ -185,16 +192,11 @@ namespace Logic.Import.HealthConnect
                     DeviceName = string.Empty,
                     UserId = _userSecurity.CurrentUser.Id,
                     IsActive = false,
-                    Status = ConnectionStatus.Disconnected,     
+                    Status = ConnectionStatus.Disconnected,
                 };
             }
 
-            if (configurations.Count() > 1)
-            {
-                throw new InvalidOperationException($"Multiple HealthConnect configurations found for user {_userSecurity.CurrentUser.Id}.");
-            }
-
-            return configurations.First();
+            return configuration;
         }
 
         private HealthConnectConfigurationEntity GetDefaultHealthConnectConfigurationEntity()
@@ -205,7 +207,7 @@ namespace Logic.Import.HealthConnect
                 UserId = _userSecurity.CurrentUser.Id,
                 DeviceName = string.Empty,
                 Status = ConnectionStatus.Disconnected,
-                IsActive = false, 
+                IsActive = false,
             };
 
             return configurationEntity;
@@ -235,12 +237,13 @@ namespace Logic.Import.HealthConnect
         }
 
         private HealthConnectConfiguration ToConfigurationModel(
-            HealthConnectConfigurationEntity configurationEntity, 
+            HealthConnectConfigurationEntity configurationEntity,
             HashSet<HealthConnectMetricMapping> metrics,
             HashSet<HealthConnectSourceMapping> sources)
         {
             return new HealthConnectConfiguration
             {
+                Id = configurationEntity.Id,
                 DeviceId = configurationEntity.DeviceId,
                 DeviceName = configurationEntity.DeviceName,
                 SyncClientId = configurationEntity.SyncClientId,
@@ -271,7 +274,7 @@ namespace Logic.Import.HealthConnect
         }
 
         private async Task UpdateSourceMappingEntities(
-            ICollection<HealthConnectSourceMappingEntity> mappingEntities, 
+            ICollection<HealthConnectSourceMappingEntity> mappingEntities,
             HashSet<HealthConnectSourceMapping> updatedSourceMappings)
         {
             foreach (var item in mappingEntities)

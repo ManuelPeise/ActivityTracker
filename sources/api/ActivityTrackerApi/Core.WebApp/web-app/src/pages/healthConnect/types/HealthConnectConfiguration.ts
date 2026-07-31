@@ -1,15 +1,17 @@
 import { ConnectionStatus } from "../../../lib/enums/ConnectionStatus";
-import { HealthConnectMetric } from "./HealthConnectMetric";
-import { HealthConnectProvider } from "./HealthConnectProvider";
+import { HealthConnectMetricMapping } from "./HealthConnectMetricMapping";
+import { HealthConnectSourceMapping } from "./HealthConnectSourceMapping";
 
 export type HealthConnectConfiguration = {
+  id: number;
+  deviceId: string;
+  userId: number;
+  deviceName: string;
+  syncClientId: string;
   isActive: boolean;
   status: ConnectionStatus;
-  selectedSourceId: number;
-  availableSources: HealthConnectProvider[];
-  selectedMetricIds: number[];
-  metrics: HealthConnectMetric[];
-  isInitialLoad: boolean;
+  sourceMappings: HealthConnectSourceMapping[];
+  metricMappings: HealthConnectMetricMapping[];
   updatedAt: string;
   updatedBy: string;
 };

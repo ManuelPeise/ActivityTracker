@@ -4,7 +4,9 @@ namespace Shared.Models.Import.HealthConnect
 {
     public class HealthConnectConfigurationBase
     {
+        public int Id { get; set; }
         public string DeviceId { get; set; } = string.Empty;
+        public int UserId { get; set; }
         public string DeviceName { get; set; } = string.Empty;
         public string SyncClientId { get; set; } = string.Empty;
         public bool IsActive { get; set; }
