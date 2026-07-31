@@ -1,5 +1,6 @@
 package com.example.activitytrackersyncclientapp.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
@@ -26,10 +27,15 @@ import androidx.navigation.NavController
 import com.example.activitytrackersyncclientapp.R
 import com.example.activitytrackersyncclientapp.Screen
 import com.example.activitytrackersyncclientapp.components.CustomButton
+import com.example.activitytrackersyncclientapp.viewModels.ViewModelFactory
 import com.example.activitytrackersyncclientapp.viewModels.WelcomeScreenViewModel
 
 @Composable
-fun WelcomeScreen(navController: NavController, viewModel: WelcomeScreenViewModel = viewModel()) {
+fun WelcomeScreen(
+    context: Context,
+    navController: NavController,
+    viewModel: WelcomeScreenViewModel = viewModel(factory = ViewModelFactory(context))
+) {
 
     val uiState by viewModel.uiState.collectAsState()
 

@@ -1,6 +1,7 @@
 package com.example.activitytrackersyncclientapp
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -19,15 +20,15 @@ fun App() {
     ) {
 
         composable(Screen.Welcome.route) {
-                WelcomeScreen(navController)
+                WelcomeScreen(LocalContext.current, navController)
         }
 
         composable(Screen.Login.route) {
-            LoginScreen(navController)
+            LoginScreen(LocalContext.current, navController)
         }
 
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController)
+            DashboardScreen(LocalContext.current)
         }
     }
 }

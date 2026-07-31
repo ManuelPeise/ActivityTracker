@@ -1,126 +1,86 @@
 package com.example.activitytrackersyncclientapp.network
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import com.example.activitytrackersyncclientapp.BuildConfig
+import com.example.activitytrackersyncclientapp.models.ApiRequest
+import com.example.activitytrackersyncclientapp.models.ApiResponse
+import com.example.activitytrackersyncclientapp.models.RefreshRequest
+import com.example.activitytrackersyncclientapp.models.TokenResponse
+import com.example.activitytrackersyncclientapp.services.JsonSerializer
+import com.example.activitytrackersyncclientapp.services.TokenManager
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import android.util.Log
+import retrofit2.http.Body
+import retrofit2.http.POST
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-data class ApiResponse<TResponse>(
-    val success: Boolean,
-    val message: String,
-    val data: TResponse? = null
-)
+interface AuthApi {
+    @POST("token/refreshToken")
+    suspend fun refresh(
+        @Body request: RefreshRequest
+    ): TokenResponse
+}
 
-object ApiService  {
-    val client = OkHttpClient.Builder()
-        .build()
+class ApiService(private val isPrivate: Boolean = true,
+                 private val tokenManager: TokenManager,
+                 private val authApi: AuthApi,
+                 val jsonSerializer: JsonSerializer) {
 
-    val baseUrl: String = runCatching {
-        Class.forName("com.example.activitytrackersyncclientapp.BuildConfig")
-            .getField("API_BASE_URL")
-            .get(null) as String
-    }.getOrDefault("")
+    val baseUrl: String = BuildConfig.API_BASE_URL
 
-
-    val mediaType =
-        "application/json".toMediaType()
-
-    suspend inline fun <reified TResponse> sendGetRequest(
-        url: String
-    ): ApiResponse<TResponse> {
-
-        return withContext(Dispatchers.IO) {
-            val requestUrl = baseUrl + url
-
-            val request = Request.Builder()
-                .url(requestUrl)
-                .headers(okhttp3.Headers.Builder()
-                    .add("Content-Type", "application/json")
-                    .build()
-                )
-                .get()
-                .build()
-
-            val response = client.newCall(request)
-                .execute()
-
-            if (response.code == 200) {
-                val body = response.body?.string() ?: ""
-                Log.e("ApiService ~ 54", "Response body: $body")
-
-                val responseModel = Json.decodeFromString<TResponse>(body)
-
-                ApiResponse<TResponse>(
-                    success = true,
-                    message = "Success",
-                    data = responseModel
-                )
-
-            } else {
-
-                ApiResponse<TResponse>(
-                    success = false,
-                    message = response.message,
-                    data = null
-                )
-            }
-        }
+    val client = if (isPrivate) {
+        OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(tokenManager))
+            .authenticator(
+                TokenAuthenticator(tokenManager, authApi)
+            )
+            .build()
+    } else {
+        OkHttpClient.Builder().build()
     }
 
-    suspend inline fun <reified TResponse, reified TRequest> sendPostRequest(
-        url: String,
-        body: TRequest
-    ): ApiResponse<TResponse> {
+    suspend inline fun <reified TRequest, reified TResponse> sendRequest(request: ApiRequest<TRequest>): ApiResponse<TResponse> =
+        withContext(Dispatchers.IO) {
 
-        return withContext(Dispatchers.IO) {
+            val requestUrl = baseUrl + request.url
 
-            val jsonBody =
-                Json.encodeToString(body)
-
-            val requestBody =
-                jsonBody.toRequestBody(mediaType)
-
-            val requestUrl = baseUrl + url
-
-            val request = Request.Builder()
-                .url(requestUrl)
-                .headers(okhttp3.Headers.Builder()
-                    .add("Content-Type", "application/json")
-                    .build()
-                )
-                .post(requestBody)
+            val requestBuilder = okhttp3.Request.Builder()
+            .url(requestUrl)
+            .headers(okhttp3.Headers.Builder()
+                .add("Content-Type", "application/json")
                 .build()
+            )
 
-            val response =
-                client.newCall(request)
-                    .execute()
+            if(request.method == "GET") {
+                requestBuilder.get()
+            }
 
-            if (response.code == 200) {
+            if(request.method == "POST") {
+                val jsonBody = jsonSerializer.toJson<TRequest>(request.data as TRequest)
 
+                val requestBody = jsonBody
+                    .toRequestBody("application/json".toMediaType())
+                    requestBuilder.post(requestBody)
+            }
+
+            val response = client.newCall(requestBuilder.build()).execute()
+
+            if (response.isSuccessful) {
                 val body = response.body?.string() ?: ""
-                Log.e("ApiService ~ 106", "Response body: $body")
+                val responseModel = jsonSerializer.toModel<TResponse>(body)
 
-                val responseModel = Json.decodeFromString<TResponse>(body)
-
-                ApiResponse<TResponse>(
+                ApiResponse(
                     success = true,
                     message = "Success",
                     data = responseModel
                 )
-
             } else {
-
                 ApiResponse(
                     success = false,
                     message = response.message,
                     data = null
                 )
             }
-        }
     }
 }
