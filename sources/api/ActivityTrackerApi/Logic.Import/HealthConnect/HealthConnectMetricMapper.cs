@@ -119,7 +119,8 @@ namespace Logic.Import.HealthConnect
             }
 
             var metricNames = metrics.Select(m => m.Name).Distinct().ToList();
-            var existingMetrics = await HealthConnectRepository.HealthConnectMetricTable.GetBy(m => metricNames.Contains(m.Name));
+            var allExistingMetrics = await HealthConnectRepository.HealthConnectMetricTable.GetAll();
+            var existingMetrics = allExistingMetrics.Where(m => metricNames.Contains(m.Name)).ToList();
             var existingMetricNames = existingMetrics.Select(m => m.Name).ToHashSet();
 
             var newMetricEntities = metrics

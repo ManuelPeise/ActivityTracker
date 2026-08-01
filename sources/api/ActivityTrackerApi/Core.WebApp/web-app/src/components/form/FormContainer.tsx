@@ -1,5 +1,6 @@
 import React, { PropsWithChildren } from "react";
 import {
+  Avatar,
   Box,
   Button,
   Card,
@@ -19,11 +20,13 @@ interface FormContainerProps extends PropsWithChildren {
   title: string;
   subtitle?: string;
   minWidth?: string;
+  avatarSrc?: string;
   formButtonProps?: FormButtonProps[];
 }
 
 const FormContainer: React.FC<FormContainerProps> = (props) => {
-  const { children, title, subtitle, minWidth, formButtonProps } = props;
+  const { children, title, subtitle, minWidth, formButtonProps, avatarSrc } =
+    props;
 
   const { theme } = useStyles();
 
@@ -39,29 +42,47 @@ const FormContainer: React.FC<FormContainerProps> = (props) => {
     >
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack spacing={3}>
-          <Box>
-            <Typography
-              sx={{
-                fontSize: theme.fonts.sizeLarge,
-                fontWeight: theme.fonts.weightBold,
-                color: theme.palette.textPrimary,
-              }}
-            >
-              {title}
-            </Typography>
-            {subtitle && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box>
               <Typography
                 sx={{
-                  mt: 0.5,
-                  fontSize: theme.fonts.sizeSmall,
-                  color: theme.palette.textSecondary,
+                  fontSize: theme.fonts.sizeLarge,
+                  fontWeight: theme.fonts.weightBold,
+                  color: theme.palette.textPrimary,
                 }}
               >
-                {subtitle}
+                {title}
               </Typography>
-            )}
+              {subtitle && (
+                <Typography
+                  sx={{
+                    mt: 0.5,
+                    fontSize: theme.fonts.sizeSmall,
+                    color: theme.palette.textSecondary,
+                  }}
+                >
+                  {subtitle}
+                </Typography>
+              )}
+            </Box>
+            <Box>
+              {avatarSrc && (
+                <Box sx={{ padding: 2 }}>
+                  <Avatar
+                    src={avatarSrc}
+                    alt="Avatar"
+                    sx={{ width: 100, height: 100 }}
+                  />
+                </Box>
+              )}
+            </Box>
           </Box>
-
           <Box
             sx={{
               width: "100%",

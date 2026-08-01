@@ -102,7 +102,12 @@ namespace Logic.Import.HealthConnect
 
                 configurationEntity.DeviceId = configurationUpdate.DeviceId;
                 configurationEntity.DeviceName = configurationUpdate.DeviceName;
-                configurationEntity.Status = configurationUpdate.Status;
+                configurationEntity.Status = configurationEntity.IsActive 
+                    && !configurationEntity.HealthConnectSourceMappings.Any() 
+                        ? ConnectionStatus.Pending 
+                        : !configurationEntity.IsActive 
+                        ? ConnectionStatus.Disconnected 
+                        : ConnectionStatus.Connected;
 
                 await UpdateMetricMappingEntities(configurationEntity.HealthConnectMetricMappings, updatedMetricMappings);
                 await UpdateSourceMappingEntities(configurationEntity.HealthConnectSourceMappings, updatedSourceMappings);
@@ -175,7 +180,7 @@ namespace Logic.Import.HealthConnect
         private async Task<HealthConnectConfigurationEntity> LoadConfigurationEntity(int userId)
         {
             HealthConnectConfigurationEntity? configuration;
-            var configurations = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.GetBy(x => x.UserId == userId);
+            var configurations = await _applicationUnitOfWork.HealthConnectRepository.HealthConnectConfigurationTable.GetBy(x => x.UserId == userId, false);
 
             if (configurations != null && configurations.Count() > 1)
             {
@@ -193,6 +198,9 @@ namespace Logic.Import.HealthConnect
                     UserId = _userSecurity.CurrentUser.Id,
                     IsActive = false,
                     Status = ConnectionStatus.Disconnected,
+                    SyncClientId = string.Empty,
+                    HealthConnectMetricMappings = new List<HealthConnectMetricMappingEntity>(),
+                    HealthConnectSourceMappings = new List<HealthConnectSourceMappingEntity>(),
                 };
             }
 

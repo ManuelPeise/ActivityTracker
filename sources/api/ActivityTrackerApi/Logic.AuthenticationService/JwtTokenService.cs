@@ -31,19 +31,12 @@ namespace Logic.AuthenticationService
         {
             var principal = GetPrincipalFromExpiredToken(request.Jwt);
 
-            var email = principal.Identity!.Name ?? string.Empty;
+            var userId = principal.Claims.FirstOrDefault(x => x.Type == "userId")?.Value ?? "0";
 
-            var users = await _applicationUnitOfWork.UserRepository.UserTable.GetBy(
-                user => user.EmailAddress == email, 
-                true,
+            var user = await _applicationUnitOfWork.UserRepository.UserTable.GetById(
+                int.Parse(userId),
+                false,
                 user => user.Include(u => u.UserAuthentication));
-
-            if(!users.Any() || users.Count() > 1)
-            {
-                throw new SecurityTokenException("Invalid refresh token");
-            }
-
-            var user = users.First();
 
             if (user == null || user?.UserAuthentication == null || user.UserAuthentication.RefreshToken != request.RefreshToken)
             {

@@ -31,7 +31,7 @@ namespace Logic.AuthenticationService
 
                 var users = await _applicationUnitOfWork.UserRepository.UserTable.GetBy(
                     user => user.EmailAddress == request.EmailAddress, 
-                    true,
+                    false,
                     user => user.Include(u => u.UserAuthentication));
 
                 if(!users.Any() || users.Count() > 1)
@@ -57,7 +57,7 @@ namespace Logic.AuthenticationService
                     user.UserAuthentication.RefreshToken = refreshToken;
                     user.UserAuthentication.RefreshTokenExpiresAt = DateTime.UtcNow.AddSeconds(_jwtTokenService.GetJwtExpireSeconds());
 
-                    isUpdated = await _applicationUnitOfWork.UserRepository.UserTable.Update(user, u => u.Id == user.Id);
+                    isUpdated = await _applicationUnitOfWork.UserRepository.UserAuthenticationTable.Update(user.UserAuthentication, u => u.Id == user.UserAuthentication.Id);
                 }
 
                 if (isUpdated)

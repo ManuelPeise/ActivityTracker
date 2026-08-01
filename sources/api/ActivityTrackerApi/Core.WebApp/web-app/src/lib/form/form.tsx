@@ -1,6 +1,7 @@
 import React from "react";
 import { FormField } from "../factories/formFieldFactory";
 import {
+  Avatar,
   Checkbox,
   FormControlLabel,
   FormGroup,
@@ -13,7 +14,7 @@ import {
 type FormFieldProps<TModel> = FormField<TModel> & {
   value: TModel[keyof TModel] | null | undefined;
   isPassword?: boolean;
-  onChange: (key: keyof TModel, value: TModel[keyof TModel]) => void;
+  onChange?: (key: keyof TModel, value: TModel[keyof TModel]) => void;
 };
 
 export type FormFieldComponents = {
@@ -33,6 +34,7 @@ export type FormFieldComponents = {
   ListItemSwitchField: <TModel>(
     props: FormFieldProps<TModel>,
   ) => React.ReactElement;
+  StatusListItem: <TModel>(props: FormFieldProps<TModel>) => React.ReactElement;
 };
 
 function formTextfield<TModel>(
@@ -63,7 +65,7 @@ function formTextfield<TModel>(
       required={required}
       disabled={disabled}
       onChange={(event) =>
-        onChange(propertyName, event.target.value as TModel[keyof TModel])
+        onChange?.(propertyName, event.target.value as TModel[keyof TModel])
       }
       value={value ?? ""}
       error={isHighlighted}
@@ -88,13 +90,14 @@ function formListItemTextField<TModel>(
     props.validationCallback &&
     props.required &&
     !props.validationCallback(props.value as TModel[keyof TModel])
-      ? props.errorMessage
+      ? props.message
       : undefined;
 
   return (
     <ListItem
-      sx={{ display: "flex", alignItems: "baseline", height: 56 }}
+      sx={{ display: "flex", alignItems: "baseline", height: 70 }}
       key={props.propertyName as string}
+      divider
     >
       <ListItemText
         primary={props.required ? `${props.label} *` : props.label}
@@ -129,7 +132,7 @@ function formNumberfield<TModel>(
     const newValue = rawValue === "" ? null : Number(rawValue);
 
     if (newValue === null || !Number.isNaN(newValue)) {
-      onChange(propertyName, newValue as TModel[keyof TModel]);
+      onChange?.(propertyName, newValue as TModel[keyof TModel]);
     }
   };
 
@@ -166,13 +169,14 @@ function formListItemNumberField<TModel>(
     props.validationCallback &&
     props.required &&
     !props.validationCallback(props.value as TModel[keyof TModel])
-      ? props.errorMessage
+      ? props.message
       : undefined;
 
   return (
     <ListItem
-      sx={{ display: "flex", alignItems: "baseline", height: 56 }}
+      sx={{ display: "flex", alignItems: "baseline", height: 70 }}
       key={props.propertyName as string}
+      divider
     >
       <ListItemText
         primary={props.required ? `${props.label} *` : props.label}
@@ -212,7 +216,7 @@ function formCheckboxfield<TModel>(
             required={required}
             disabled={disabled}
             onChange={(event) =>
-              onChange(
+              onChange?.(
                 propertyName,
                 event.target.checked as TModel[keyof TModel],
               )
@@ -221,7 +225,7 @@ function formCheckboxfield<TModel>(
         }
         label={label}
       />
-      {isHighlighted && <ListItemText secondary={props.errorMessage} />}
+      {isHighlighted && <ListItemText secondary={props.message} />}
     </FormGroup>
   );
 }
@@ -234,8 +238,12 @@ function formListItemCheckboxField<TModel>(
     label: undefined,
   };
   return (
-    <ListItem key={props.propertyName as string}>
-      <ListItemText primary={props.label} secondary={props.errorMessage} />
+    <ListItem
+      key={props.propertyName as string}
+      sx={{ display: "flex", alignItems: "baseline", height: 70 }}
+      divider
+    >
+      <ListItemText primary={props.label} secondary={props.message} />
       {formCheckboxfield(formCheckboxfieldProps)}
     </ListItem>
   );
@@ -259,7 +267,7 @@ function formSwitchfield<TModel>(
             required={isRequiredForControl}
             disabled={disabled}
             onChange={(event) =>
-              onChange(
+              onChange?.(
                 propertyName,
                 event.target.checked as TModel[keyof TModel],
               )
@@ -284,19 +292,45 @@ function formListItemSwitchField<TModel>(
     props.validationCallback &&
     props.required &&
     !props.validationCallback(props.value as TModel[keyof TModel])
-      ? props.errorMessage
+      ? props.message
       : undefined;
 
   return (
     <ListItem
-      sx={{ display: "flex", alignItems: "baseline", height: 56 }}
+      sx={{ display: "flex", alignItems: "baseline", height: 70 }}
       key={props.propertyName as string}
+      divider
     >
       <ListItemText
         primary={props.required ? `${props.label} *` : props.label}
         secondary={errorMessage}
       />
       {formSwitchfield(switchProps)}
+    </ListItem>
+  );
+}
+
+function formStatusListItem<TModel>(
+  props: FormFieldProps<TModel>,
+): React.ReactElement {
+  const { propertyName, label, message, avatarSrc, statusColor } = props;
+  const StatusAvatar = avatarSrc ? React.createElement(avatarSrc) : null;
+
+  return (
+    <ListItem
+      sx={{ display: "flex", alignItems: "baseline", height: 70 }}
+      key={propertyName as string}
+      divider
+    >
+      <ListItemText primary={label} secondary={message} />
+      <Avatar
+        sx={{
+          bgcolor: "transparent",
+          color: statusColor,
+        }}
+      >
+        {StatusAvatar}
+      </Avatar>
     </ListItem>
   );
 }
@@ -310,4 +344,5 @@ export const formFields: FormFieldComponents = {
   ListItemCheckboxField: formListItemCheckboxField,
   SwitchField: formSwitchfield,
   ListItemSwitchField: formListItemSwitchField,
+  StatusListItem: formStatusListItem,
 };

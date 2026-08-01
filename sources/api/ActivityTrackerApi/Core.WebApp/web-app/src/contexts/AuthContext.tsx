@@ -2,11 +2,17 @@ import React from "react";
 import { useApi } from "../hooks/useApi";
 import useLocalStorage, { LocalStorageKeys } from "../hooks/useLocalStorage";
 
+export type TokenModel = {
+  jwtToken: string;
+  refreshToken: string;
+};
+
 export type AuthContextProps = {
   isAuthenticated: boolean;
   onLogout: () => Promise<void>;
   onLogin: (request: AuthenticationRequest) => Promise<void>;
   onRegister: (request: UserRegistrationRequestModel) => Promise<boolean>;
+  tokens: TokenModel;
 };
 
 export const AuthContext = React.createContext<AuthContextProps>({
@@ -15,6 +21,7 @@ export const AuthContext = React.createContext<AuthContextProps>({
   onLogin: async (request: AuthenticationRequest) => {},
   onRegister: async (request: UserRegistrationRequestModel): Promise<boolean> =>
     false,
+  tokens: { jwtToken: "", refreshToken: "" },
 });
 
 export type UserRegistration = {
@@ -96,6 +103,13 @@ const AuthenticationContextProvider: React.FC<{
     setIsAuthenticated(false);
   }, [localStorage]);
 
+  const tokens = React.useMemo((): TokenModel => {
+    const jwtToken = localStorage.getValue(LocalStorageKeys.JwtToken);
+    const refreshToken = localStorage.getValue(LocalStorageKeys.RefreshToken);
+
+    return { jwtToken: jwtToken || "", refreshToken: refreshToken || "" };
+  }, [localStorage]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -103,6 +117,7 @@ const AuthenticationContextProvider: React.FC<{
         onLogout: onLogout,
         onLogin: onLogin,
         onRegister: onRegister,
+        tokens: tokens,
       }}
     >
       {children}

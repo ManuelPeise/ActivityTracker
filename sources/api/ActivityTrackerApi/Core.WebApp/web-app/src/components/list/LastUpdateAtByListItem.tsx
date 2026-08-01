@@ -44,7 +44,7 @@ const LastUpdateAtByListItem: React.FC<LastUpdateAtByListItemProps> = ({
           letterSpacing: 0.2,
           fontStyle: "italic",
         }}
-        primary={`Last Updated by: ${lastUpdateBy || "N/A"} at ${formattedLastUpdateAt}`}
+        primary={`Last update by ${lastUpdateBy || "N/A"} at ${formattedLastUpdateAt}`}
       />
     </ListItem>
   );

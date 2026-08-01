@@ -1,19 +1,15 @@
 import React from "react";
 import PageContainer from "../../components/wrappers/PageContainer";
-import { Stack, Box, Typography, Avatar } from "@mui/material";
-import useStyles from "../../hooks/useStyles";
+import { List } from "@mui/material";
 import healthConnectLogo from "../../lib/images/Health_Connect_LOGO.svg";
 import FormContainer, {
   FormButtonProps,
 } from "../../components/form/FormContainer";
-import FormListItemSwitch from "../../components/list/FormListItemSwitch";
 import { HealthConnectConfiguration } from "./types/HealthConnectConfiguration";
-import { useForm } from "../../hooks/useForm";
-import StatusListItem from "../../components/list/StatusListitem";
-import { ConnectionStatus } from "../../lib/enums/ConnectionStatus";
-import { HealthConnectMetricMapping } from "./types/HealthConnectMetricMapping";
-import FormChipListItem from "../../components/list/FormChipListItem";
 import LastUpdateAtByListItem from "../../components/list/LastUpdateAtByListItem";
+import { useCore } from "../../hooks/useCore";
+import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
+import { ConnectionStatus } from "../../lib/enums/ConnectionStatus";
 
 type HealthConnectPageProps = {
   configuration: HealthConnectConfiguration;
@@ -24,52 +20,82 @@ type HealthConnectPageProps = {
 
 const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
   const { configuration, handleUpdateConfiguration } = props;
-  const { theme } = useStyles();
 
-  const initialMetrics = React.useMemo((): HealthConnectMetricMapping[] => {
-    return configuration.metricMappings ?? [];
-  }, [configuration.metricMappings]);
+  const [statusText, statusColor] = React.useMemo((): [
+    string,
+    "red" | "yellow" | "green",
+  ] => {
+    switch (configuration.status) {
+      case ConnectionStatus.Connected:
+        return ["Health Connect service is connected.", "green"];
+      case ConnectionStatus.Disconnected:
+        return ["Health Connect service is disconnected.", "red"];
+      case ConnectionStatus.Pending:
+        return [
+          "Health Connect service connection is in a pending state, to complete the setup establish the connection with the provided Sync Client App on your mobile device.",
+          "yellow",
+        ];
+      default:
+        return ["Unknown", "red"];
+    }
+  }, [configuration.status]);
 
-  const { isModified, subscribeValues, onChange, resetForm, updatedModel } =
-    useForm<HealthConnectConfiguration>(configuration);
-
-  const { isActive, status, lastUpdatedAt, lastUpdatedBy } = subscribeValues(
-    (configuration) => ({
-      isActive: configuration.isActive,
-      status: configuration.status,
-
-      lastUpdatedAt: configuration.updatedAt,
-      lastUpdatedBy: configuration.updatedBy,
-    }),
+  const healthConnectForm = useCore.createForm<HealthConnectConfiguration>(
+    (factory) => [
+      factory.createStatusSettings(
+        "status",
+        "Connection Status",
+        statusText,
+        PrivacyTipIcon,
+        statusColor,
+      ),
+      factory.createStringFormField(
+        "deviceId",
+        "Device ID",
+        true,
+        true,
+        false,
+        "Your Health Connect Device ID will be set by the system, if the Sync Client App is installed on your mobile device and the Health Connect integration is activated.",
+        (value) => typeof value === "string" && value.length > 0,
+      ),
+      factory.createStringFormField(
+        "deviceName",
+        "Device Name",
+        true,
+        true,
+        false,
+        "Your Health Connect Device Name will be set by the system, if the Sync Client App is installed on your mobile device and the Health Connect integration is activated.",
+        (value) => typeof value === "string" && value.length > 0,
+      ),
+      factory.createBooleanFormField(
+        "isActive",
+        "Activate your Health Connect Integration",
+        true,
+        false,
+        "Your Health Connect integration must be activated to import your health data.",
+        (value) => typeof value === "boolean" && value === true,
+      ),
+    ],
   );
 
   const formButtonProps = React.useMemo((): FormButtonProps[] => {
     return [
-      { label: "Cancel", disabled: !isModified, action: resetForm },
+      {
+        label: "Cancel",
+        disabled: !healthConnectForm.isModified,
+        action: () => healthConnectForm.resetForm(),
+      },
       {
         label: "Save Changes",
-        disabled: !isModified,
+        disabled: !healthConnectForm.isModified,
         action: async () => {
           await handleUpdateConfiguration({
-            ...updatedModel,
+            ...healthConnectForm.getUpdatedModel(),
           });
         },
       },
     ];
-  }, [resetForm, isModified, updatedModel, handleUpdateConfiguration]);
-
-  const statusText = React.useMemo((): string => {
-    switch (status) {
-      case ConnectionStatus.Connected:
-        return "Health Connect service is connected.";
-      case ConnectionStatus.Disconnected:
-        return "Health Connect service is disconnected.";
-      case ConnectionStatus.Pending:
-        return "Health Connect service connection is in a pending state, to complete the setup establish the connection with the provided Sync Client App on your mobile device.";
-      default:
-        return "Unknown";
-    }
-  }, [status]);
+  }, [healthConnectForm, handleUpdateConfiguration]);
 
   return (
     <PageContainer
@@ -78,64 +104,72 @@ const HealthConnectPage: React.FC<HealthConnectPageProps> = (props) => {
       alignItems="flex-start"
       fullWidth={true}
     >
-      <Stack sx={{ width: "100%", padding: 2, gap: 3, mb: 2 }}>
-        <Box
-          sx={{
-            width: "100%",
-            display: "flex",
-            flexDirection: "row",
-            gap: 0.5,
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "1.6rem",
-                fontWeight: theme.fonts.weightBold,
-                color: theme.palette.textPrimary,
-              }}
-            >
-              Health Connect Integration
-            </Typography>
-            <Typography sx={{ color: theme.palette.textSecondary, mt: 0.5 }}>
-              Connect your health data to get personalized insights.
-            </Typography>
-          </Box>
-          <Box>
-            <Avatar
-              src={healthConnectLogo}
-              alt="Health Connect logo"
-              sx={{ width: 100, height: 100 }}
-            />
-          </Box>
-        </Box>
-      </Stack>
       <FormContainer
-        title="Connection Setup"
+        title="Health Connect Setup"
         subtitle="Set up your Health Connect integration to import your health data."
+        avatarSrc={healthConnectLogo}
         formButtonProps={formButtonProps}
       >
-        <StatusListItem
-          statusText={statusText}
-          status={status}
-          divider={true}
-        />
-        <FormListItemSwitch
-          label="Activate Health Connect Integration"
-          propertyName="isActive"
-          value={isActive}
-          disabled={false}
-          divider={true}
-          onChange={(_, value) => onChange("isActive", value)}
-        />
+        <List
+          disablePadding={false}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            width: "100%",
+          }}
+        >
+          {healthConnectForm.fields.map((field) => {
+            const onChange = (
+              key: keyof HealthConnectConfiguration,
+              value: HealthConnectConfiguration[keyof HealthConnectConfiguration],
+            ) => {
+              healthConnectForm.updateModel({
+                [key]: value,
+              } as Partial<HealthConnectConfiguration>);
+            };
 
-        <LastUpdateAtByListItem
-          lastUpdateAt={lastUpdatedAt}
-          lastUpdateBy={lastUpdatedBy}
-          divider={false}
-        />
+            if (field.type === "text") {
+              return (
+                <healthConnectForm.components.ListItemTextField
+                  key={field.propertyName as string}
+                  {...field}
+                  value={healthConnectForm.model.deviceId}
+                  onChange={(_, value) => onChange("deviceId", value)}
+                />
+              );
+            }
+
+            if (field.type === "boolean") {
+              return (
+                <healthConnectForm.components.ListItemSwitchField
+                  key={field.propertyName as string}
+                  {...field}
+                  value={healthConnectForm.model.isActive}
+                  onChange={(_, value) => onChange("isActive", value)}
+                />
+              );
+            }
+
+            if (field.type === "status") {
+              return (
+                <healthConnectForm.components.StatusListItem
+                  key={field.propertyName as string}
+                  {...field}
+                  value={healthConnectForm.model.status}
+                  onChange={(_, value) => onChange("status", value)}
+                />
+              );
+            }
+            return null;
+          })}
+
+          <LastUpdateAtByListItem
+            lastUpdateAt={configuration.updatedAt}
+            lastUpdateBy={configuration.updatedBy}
+            divider={false}
+          />
+        </List>
       </FormContainer>
     </PageContainer>
   );

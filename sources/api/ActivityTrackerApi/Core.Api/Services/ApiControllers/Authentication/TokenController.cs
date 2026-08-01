@@ -4,7 +4,7 @@ using Shared.Models.Authentication;
 
 namespace Core.Api.Services.ApiControllers.Authentication
 {
-    [WebAuthentication]
+    [RefreshAuthentication]
     public class TokenController: ApiControllerBase
     {
         private readonly IJwtTokenService _jwtTokenService;
@@ -14,7 +14,7 @@ namespace Core.Api.Services.ApiControllers.Authentication
         }
 
         [HttpPost(Name = "RefreshToken")]
-        public async Task<TokenResponse?> RefreshToken([FromQuery] RefreshTokenRequest request)
+        public async Task<TokenResponse?> RefreshToken([FromBody] RefreshTokenRequest request)
         {
             
             var tokenResponse = await _jwtTokenService.RefreshToken(request);

@@ -1,10 +1,24 @@
+import { SvgIconTypeMap } from "@mui/material";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
+
 export type FormField<TModel> = {
   propertyName: keyof TModel;
-  type: "text" | "password" | "number" | "boolean" | "array";
+  type:
+    | "text"
+    | "password"
+    | "number"
+    | "boolean"
+    | "array"
+    | "status"
+    | "logMessage";
   label?: string;
   required?: boolean;
   disabled?: boolean;
-  errorMessage?: string;
+  message?: string;
+  avatarSrc?: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+    muiName: string;
+  };
+  statusColor?: "green" | "red" | "yellow";
   validationCallback?: (value: TModel[keyof TModel]) => boolean;
 };
 
@@ -15,7 +29,7 @@ export type FormFieldFactory<TModel extends Record<string, unknown>> = {
     required?: boolean,
     disabled?: boolean,
     isPassword?: boolean,
-    errorMessage?: string,
+    message?: string,
     validationCallback?: (value: TModel[keyof TModel]) => boolean,
   ) => FormField<TModel>;
   createNumberFormField: (
@@ -23,7 +37,7 @@ export type FormFieldFactory<TModel extends Record<string, unknown>> = {
     label?: string,
     required?: boolean,
     disabled?: boolean,
-    errorMessage?: string,
+    message?: string,
     validationCallback?: (value: TModel[keyof TModel]) => boolean,
   ) => FormField<TModel>;
   createBooleanFormField: (
@@ -31,7 +45,7 @@ export type FormFieldFactory<TModel extends Record<string, unknown>> = {
     label?: string,
     required?: boolean,
     disabled?: boolean,
-    errorMessage?: string,
+    message?: string,
     validationCallback?: (value: TModel[keyof TModel]) => boolean,
   ) => FormField<TModel>;
   createArraySettings: (
@@ -39,8 +53,17 @@ export type FormFieldFactory<TModel extends Record<string, unknown>> = {
     label?: string,
     required?: boolean,
     disabled?: boolean,
-    errorMessage?: string,
+    message?: string,
     validationCallback?: (value: TModel[keyof TModel]) => boolean,
+  ) => FormField<TModel>;
+  createStatusSettings: (
+    propertyName: keyof TModel,
+    label: string,
+    message: string,
+    avatarSrc: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+      muiName: string;
+    },
+    statusColor?: "green" | "red" | "yellow",
   ) => FormField<TModel>;
 };
 
@@ -54,7 +77,7 @@ export const createFormFieldFactory = <
       required,
       disabled,
       isPassword,
-      errorMessage,
+      message,
       validationCallback,
     ) =>
       createStringFormField<TModel, typeof propertyName>(
@@ -63,7 +86,7 @@ export const createFormFieldFactory = <
         required,
         disabled,
         isPassword,
-        errorMessage,
+        message,
         validationCallback,
       ),
     createNumberFormField: (
@@ -71,7 +94,7 @@ export const createFormFieldFactory = <
       label,
       required,
       disabled,
-      errorMessage,
+      message,
       validationCallback,
     ) =>
       createNumberFormField<TModel, typeof propertyName>(
@@ -79,7 +102,7 @@ export const createFormFieldFactory = <
         label,
         required,
         disabled,
-        errorMessage,
+        message,
         validationCallback,
       ),
     createBooleanFormField: (
@@ -87,7 +110,7 @@ export const createFormFieldFactory = <
       label,
       required,
       disabled,
-      errorMessage,
+      message,
       validationCallback,
     ) =>
       createBooleanFormField<TModel, typeof propertyName>(
@@ -95,7 +118,7 @@ export const createFormFieldFactory = <
         label,
         required,
         disabled,
-        errorMessage,
+        message,
         validationCallback,
       ),
     createArraySettings: (
@@ -103,7 +126,7 @@ export const createFormFieldFactory = <
       label,
       required,
       disabled,
-      errorMessage,
+      message,
       validationCallback,
     ) =>
       createArraySettings<TModel, typeof propertyName>(
@@ -111,8 +134,22 @@ export const createFormFieldFactory = <
         label,
         required,
         disabled,
-        errorMessage,
+        message,
         validationCallback,
+      ),
+    createStatusSettings: (
+      propertyName,
+      label,
+      message,
+      avatarSrc,
+      statusColor,
+    ) =>
+      createStatusSettings<TModel, typeof propertyName>(
+        propertyName,
+        label,
+        message,
+        avatarSrc,
+        statusColor,
       ),
   };
 };
@@ -126,7 +163,7 @@ const createStringFormField = <
   required?: boolean,
   disabled?: boolean,
   isPassword?: boolean,
-  errorMessage?: string,
+  message?: string,
   validationCallback?: (value: TModel[keyof TModel]) => boolean,
 ): FormField<TModel> => ({
   propertyName: propertyName,
@@ -134,7 +171,7 @@ const createStringFormField = <
   label: label,
   required: required,
   disabled: disabled,
-  errorMessage: errorMessage,
+  message: message,
   validationCallback: validationCallback,
 });
 
@@ -146,7 +183,7 @@ const createNumberFormField = <
   label?: string,
   required?: boolean,
   disabled?: boolean,
-  errorMessage?: string,
+  message?: string,
   validationCallback?: (value: TModel[keyof TModel]) => boolean,
 ): FormField<TModel> => ({
   propertyName: propertyName,
@@ -154,7 +191,7 @@ const createNumberFormField = <
   label: label,
   required: required,
   disabled: disabled,
-  errorMessage: errorMessage,
+  message: message,
   validationCallback: validationCallback,
 });
 
@@ -166,7 +203,7 @@ const createBooleanFormField = <
   label?: string,
   required?: boolean,
   disabled?: boolean,
-  errorMessage?: string,
+  message?: string,
   validationCallback?: (value: TModel[keyof TModel]) => boolean,
 ): FormField<TModel> => ({
   propertyName: propertyName,
@@ -174,7 +211,7 @@ const createBooleanFormField = <
   label: label,
   required: required,
   disabled: disabled,
-  errorMessage: errorMessage,
+  message: message,
   validationCallback: validationCallback,
 });
 
@@ -186,7 +223,7 @@ const createArraySettings = <
   label?: string,
   required?: boolean,
   disabled?: boolean,
-  errorMessage?: string,
+  message?: string,
   validationCallback?: (value: TModel[keyof TModel]) => boolean,
 ): FormField<TModel> => ({
   propertyName: propertyName,
@@ -194,8 +231,30 @@ const createArraySettings = <
   label: label,
   required: required,
   disabled: disabled,
-  errorMessage: errorMessage,
+  message: message,
   validationCallback: validationCallback,
+});
+
+const createStatusSettings = <
+  TModel extends Record<string, unknown>,
+  TKey extends keyof TModel,
+>(
+  propertyName: TKey,
+  label: string,
+  message: string,
+  avatarSrc: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+    muiName: string;
+  },
+  statusColor?: "green" | "red" | "yellow",
+): FormField<TModel> => ({
+  propertyName: propertyName,
+  avatarSrc: avatarSrc,
+  type: "status",
+  label: label,
+  message: message,
+  required: false,
+  disabled: false,
+  statusColor: statusColor,
 });
 
 export const formFieldFactory: FormFieldFactory<Record<string, unknown>> = {
@@ -203,4 +262,5 @@ export const formFieldFactory: FormFieldFactory<Record<string, unknown>> = {
   createNumberFormField,
   createBooleanFormField,
   createArraySettings,
+  createStatusSettings,
 };

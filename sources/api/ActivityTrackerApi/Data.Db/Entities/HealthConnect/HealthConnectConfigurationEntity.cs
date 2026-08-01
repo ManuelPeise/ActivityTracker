@@ -14,7 +14,7 @@ namespace Data.Db.Entities.HealthConnect
         public bool IsActive { get; set; }
         public int UserId { get; set; }
         [ForeignKey(nameof(UserId))]
-        public UserEntity User { get; set; } = new();
+        public UserEntity User { get; set; }
         public ICollection<HealthConnectSourceMappingEntity> HealthConnectSourceMappings { get; set; } = [];
         public ICollection<HealthConnectMetricMappingEntity> HealthConnectMetricMappings { get; set; } = [];
     }
