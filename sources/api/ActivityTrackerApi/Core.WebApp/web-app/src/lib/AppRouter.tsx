@@ -1,4 +1,5 @@
 import React from "react";
+import SandBox from "../pages/sandbox/SandBox";
 import {
   BrowserRouter as Router,
   Navigate,
@@ -23,6 +24,7 @@ const AppRouter: React.FC = () => {
               path="/health-connect"
               element={<HealthConnectContainer />}
             />
+            <Route path="/sandbox" element={<SandBox />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (

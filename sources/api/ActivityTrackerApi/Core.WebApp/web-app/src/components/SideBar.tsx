@@ -39,6 +39,7 @@ const SideBar: React.FC<SideBarProps> = ({ isOpen, showSidebar, onClose }) => {
       icon: <FavoriteBorderIcon />,
       path: "/health-connect",
     },
+    { label: "Sandbox", icon: <FavoriteBorderIcon />, path: "/sandbox" },
   ];
 
   const handleNavigate = (path: string) => {
