@@ -257,8 +257,8 @@ namespace Logic.Import.HealthConnect
                 SyncClientId = configurationEntity.SyncClientId,
                 Status = configurationEntity.Status,
                 IsActive = configurationEntity.IsActive,
-                MetricMappings = metrics,
-                SourceMappings = sources,
+                MetricMappings = [],
+                SourceMappings = [],
                 UpdatedAt = configurationEntity?.UpdatedAt?.ToString("o") ?? string.Empty,
                 UpdatedBy = configurationEntity?.UpdatedBy ?? string.Empty,
             };

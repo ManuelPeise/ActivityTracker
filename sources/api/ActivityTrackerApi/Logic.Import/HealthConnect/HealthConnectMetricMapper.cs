@@ -90,7 +90,7 @@ namespace Logic.Import.HealthConnect
 
             foreach (var mapping in mappings)
             {
-                if (existingEntitiesDict.TryGetValue(mapping.Id, out var existingMapping))
+                if (existingEntitiesDict.TryGetValue(mapping.MetricId, out var existingMapping))
                 {
                     existingMapping.DisplayName = mapping.DisplayName;
                     existingMapping.IsActive = mapping.IsActive;

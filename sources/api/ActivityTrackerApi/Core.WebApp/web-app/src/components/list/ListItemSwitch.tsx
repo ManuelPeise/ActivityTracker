@@ -3,6 +3,7 @@ import React from "react";
 
 interface ListItemSwitchProps {
   label: string;
+  description?: string;
   propertyName: string;
   value: boolean;
   disabled?: boolean;
@@ -10,12 +11,20 @@ interface ListItemSwitchProps {
   onChange: (key: string, value: boolean) => void;
 }
 
-const FormListItemSwitch: React.FC<ListItemSwitchProps> = (props) => {
-  const { label, propertyName, value, disabled, divider, onChange } = props;
+const ListItemSwitch: React.FC<ListItemSwitchProps> = (props) => {
+  const {
+    label,
+    description,
+    propertyName,
+    value,
+    disabled,
+    divider,
+    onChange,
+  } = props;
 
   return (
     <ListItem divider={divider}>
-      <ListItemText primary={label} />
+      <ListItemText primary={label} secondary={description} />
       <Switch
         edge="end"
         checked={value}
@@ -26,4 +35,4 @@ const FormListItemSwitch: React.FC<ListItemSwitchProps> = (props) => {
   );
 };
 
-export default FormListItemSwitch;
+export default ListItemSwitch;
